@@ -1,0 +1,279 @@
+// ============================================
+// HKDL Resort Now - Global Styles
+// Disney-themed Material Design
+// ============================================
+
+@use '@angular/material' as mat;
+@use 'styles/design-tokens' as tokens;
+
+// Import design system
+@import 'styles/css-variables';
+@import 'styles/typography';
+@import 'styles/animations';
+
+// ============================================
+// MATERIAL THEME CUSTOMIZATION
+// ============================================
+
+// Define custom Disney color palettes
+$disney-purple-palette: (
+  0: #000000,
+  10: #1F0527,
+  20: #35083F,
+  25: #420A4E,
+  30: #4F0C5D,
+  35: #5C0D6B,
+  40: #690e7f,        // Main HK Disney Purple - used for primary surfaces
+  50: #7D3C98,
+  60: #9B4FB8,
+  70: #A569BD,
+  80: #C39BD3,
+  90: #EBDEF0,
+  95: #F5EEF8,
+  98: #FCF9FD,
+  99: #FEFBFF,
+  100: #ffffff,
+);
+
+$disney-gold-palette: (
+  0: #000000,
+  10: #251a00,
+  20: #3f2e00,
+  25: #4c3800,
+  30: #5a4300,
+  35: #684e00,
+  40: #775a00,
+  50: tokens.$disney-gold,
+  60: #ffdb80,
+  70: #ffe49a,
+  80: #ffedb3,
+  90: #fff5cc,
+  95: #fffae6,
+  98: #fffcf5,
+  99: #fffefb,
+  100: #ffffff,
+);
+
+// Configure Material theme with Disney colors
+html {
+  @include mat.theme((
+    color: (
+      primary: $disney-purple-palette,
+      tertiary: $disney-gold-palette,
+      theme-type: light,
+    ),
+    typography: (
+      brand-family: tokens.$font-family-heading,
+      plain-family: tokens.$font-family-body,
+    ),
+    density: 0,
+  ));
+}
+
+// Dark mode theme
+[data-theme='dark'] {
+  @include mat.theme((
+    color: (
+      primary: $disney-purple-palette,
+      tertiary: $disney-gold-palette,
+      theme-type: dark,
+    ),
+    typography: (
+      brand-family: tokens.$font-family-heading,
+      plain-family: tokens.$font-family-body,
+    ),
+    density: 0,
+  ));
+}
+
+// ============================================
+// GLOBAL STYLES
+// ============================================
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  // Force light mode always
+  color-scheme: light;
+}
+
+// ============================================
+// ACCESSIBILITY IMPROVEMENTS
+// ============================================
+
+// Focus visible styles
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+// Skip to main content link (hidden by default, visible on focus)
+.skip-to-main {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: var(--space-2);
+  text-decoration: none;
+  z-index: 1000;
+
+  &:focus {
+    top: 0;
+  }
+}
+
+// ============================================
+// UTILITY CLASSES
+// ============================================
+
+// Container
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-2);
+
+  @media (min-width: #{tokens.$breakpoint-tablet}) {
+    padding: 0 var(--space-4);
+  }
+}
+
+// Responsive grid
+.grid {
+  display: grid;
+  gap: var(--space-3);
+
+  &.grid-1 {
+    grid-template-columns: 1fr;
+  }
+
+  &.grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  &.grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+
+  @media (min-width: #{tokens.$breakpoint-desktop}) {
+    gap: var(--space-4);
+  }
+}
+
+// Flex utilities
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-1 { gap: var(--space-1); }
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+
+// Visibility utilities
+.hidden {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// ============================================
+// CUSTOM SCROLLBAR (Webkit browsers)
+// ============================================
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+
+  &:hover {
+    background: var(--color-text-disabled);
+  }
+}
+
+// ============================================
+// MATERIAL COMPONENT OVERRIDES
+// ============================================
+
+// Toolbar customization
+.mat-toolbar {
+  font-family: var(--font-family-heading) !important;
+  font-weight: var(--font-weight-semibold) !important;
+}
+
+// Card customization
+.mat-mdc-card {
+  border-radius: var(--card-radius) !important;
+  box-shadow: var(--card-shadow) !important;
+}
+
+// Button customization
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-flat-button {
+  border-radius: var(--button-radius) !important;
+  font-family: var(--font-family-heading) !important;
+  font-weight: var(--font-weight-semibold) !important;
+  text-transform: none !important;
+  min-height: var(--touch-target-min);
+}
+
+// Icon customization
+.mat-icon {
+  font-family: 'Material Icons' !important;
+}

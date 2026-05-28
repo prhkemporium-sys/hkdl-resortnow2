@@ -1,0 +1,277 @@
+// ============================================
+// HKDL Resort Now - Typography System
+// Disney-friendly fonts: Poppins + Inter
+// ============================================
+
+@use 'design-tokens' as tokens;
+
+// --------------------------------------------
+// BASE TYPOGRAPHY
+// --------------------------------------------
+body {
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// --------------------------------------------
+// HEADING STYLES (Poppins)
+// --------------------------------------------
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+// Display (Hero headings)
+.display-1,
+.display {
+  font-size: clamp(#{tokens.$font-size-4xl}, 5vw, #{tokens.$font-size-6xl});
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+// H1
+h1, .h1 {
+  font-size: clamp(#{tokens.$font-size-3xl}, 4vw, #{tokens.$font-size-4xl});
+  font-weight: var(--font-weight-bold);
+}
+
+// H2
+h2, .h2 {
+  font-size: clamp(#{tokens.$font-size-2xl}, 3vw, #{tokens.$font-size-3xl});
+  font-weight: var(--font-weight-semibold);
+}
+
+// H3
+h3, .h3 {
+  font-size: clamp(#{tokens.$font-size-xl}, 2vw, #{tokens.$font-size-2xl});
+  font-weight: var(--font-weight-semibold);
+}
+
+// H4
+h4, .h4 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+// H5
+h5, .h5 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+// H6
+h6, .h6 {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// --------------------------------------------
+// BODY TEXT STYLES (Inter)
+// --------------------------------------------
+p, .body {
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  margin: 0 0 var(--space-2) 0;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.body-lg {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-relaxed);
+}
+
+.body-sm {
+  font-size: var(--font-size-sm);
+}
+
+.body-xs {
+  font-size: var(--font-size-xs);
+}
+
+// --------------------------------------------
+// TEXT UTILITIES
+// --------------------------------------------
+
+// Font weights
+.font-light { font-weight: var(--font-weight-light); }
+.font-normal { font-weight: var(--font-weight-normal); }
+.font-medium { font-weight: var(--font-weight-medium); }
+.font-semibold { font-weight: var(--font-weight-semibold); }
+.font-bold { font-weight: var(--font-weight-bold); }
+.font-extrabold { font-weight: var(--font-weight-extrabold); }
+
+// Text alignment
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+// Text transform
+.text-uppercase { text-transform: uppercase; }
+.text-lowercase { text-transform: lowercase; }
+.text-capitalize { text-transform: capitalize; }
+
+// Text decoration
+.text-underline { text-decoration: underline; }
+.text-no-underline { text-decoration: none; }
+
+// Line height
+.leading-tight { line-height: var(--line-height-tight); }
+.leading-normal { line-height: var(--line-height-normal); }
+.leading-relaxed { line-height: var(--line-height-relaxed); }
+
+// Letter spacing
+.tracking-tight { letter-spacing: -0.025em; }
+.tracking-normal { letter-spacing: 0; }
+.tracking-wide { letter-spacing: 0.025em; }
+.tracking-wider { letter-spacing: 0.05em; }
+
+// Truncate
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// --------------------------------------------
+// SPECIAL TEXT STYLES
+// --------------------------------------------
+
+// Section headers (used in Transport component)
+.section-header {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+// Label text
+.label {
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+// Caption text
+.caption {
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+// Display numbers (large numbers like temperature)
+.display-number {
+  font-family: var(--font-family-heading);
+  font-size: clamp(#{tokens.$font-size-5xl}, 10vw, #{tokens.$font-size-7xl});
+  font-weight: var(--font-weight-light);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+// Time display (for arrivals)
+.time-display {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-accent);
+}
+
+// Badge text
+.badge-text {
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// --------------------------------------------
+// RESPONSIVE TYPOGRAPHY SCALE
+// --------------------------------------------
+@media (max-width: #{tokens.$breakpoint-tablet}) {
+  .display-number {
+    font-size: clamp(#{tokens.$font-size-4xl}, 15vw, #{tokens.$font-size-6xl});
+  }
+}
+
+// --------------------------------------------
+// ACCESSIBILITY
+// --------------------------------------------
+
+// Screen reader only text
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// Focus visible (for keyboard navigation)
+a, button, [tabindex]:not([tabindex="-1"]) {
+  &:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+// Reduce motion for accessibility
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// High contrast mode
+@media (prefers-contrast: high) {
+  body {
+    font-weight: var(--font-weight-medium);
+  }
+
+  h1, h2, h3, h4, h5, h6,
+  .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-weight: var(--font-weight-extrabold);
+  }
+}

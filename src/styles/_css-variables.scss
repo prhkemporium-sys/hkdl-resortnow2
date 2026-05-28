@@ -1,0 +1,246 @@
+// ============================================
+// HKDL Resort Now - CSS Custom Properties
+// Maps design tokens to CSS variables with
+// light/dark mode support
+// ============================================
+
+@use 'design-tokens' as tokens;
+
+// --------------------------------------------
+// ROOT VARIABLES (Light Mode Default)
+// --------------------------------------------
+:root {
+  // Colors - Primary
+  --color-primary: #{tokens.$color-primary};
+  --color-primary-light: #{tokens.$color-primary-light};
+  --color-primary-dark: #{tokens.$color-primary-dark};
+  --color-accent: #{tokens.$color-accent};
+  --color-accent-light: #{tokens.$color-accent-light};
+
+  // Colors - Transport
+  --color-mtr: #{tokens.$color-mtr};
+  --color-bus: #{tokens.$color-bus};
+  --color-interchange: #{tokens.$color-interchange};
+
+  // Colors - Status
+  --color-success: #{tokens.$color-success};
+  --color-warning: #{tokens.$color-warning};
+  --color-error: #{tokens.$color-error};
+  --color-info: #{tokens.$color-info};
+
+  // Colors - Surface
+  --color-surface: #{tokens.$color-surface};
+  --color-background: #{tokens.$color-background};
+  --color-text-primary: #{tokens.$color-text-primary};
+  --color-text-secondary: #{tokens.$color-text-secondary};
+  --color-text-disabled: #{tokens.$color-text-disabled};
+  --color-border: #{tokens.$color-border};
+  --color-divider: #{tokens.$color-divider};
+
+  // Spacing
+  --space-0: #{tokens.$space-0};
+  --space-1: #{tokens.$space-1};
+  --space-2: #{tokens.$space-2};
+  --space-3: #{tokens.$space-3};
+  --space-4: #{tokens.$space-4};
+  --space-5: #{tokens.$space-5};
+  --space-6: #{tokens.$space-6};
+  --space-8: #{tokens.$space-8};
+  --space-10: #{tokens.$space-10};
+
+  // Border Radius
+  --radius-sm: #{tokens.$radius-sm};
+  --radius-md: #{tokens.$radius-md};
+  --radius-lg: #{tokens.$radius-lg};
+  --radius-xl: #{tokens.$radius-xl};
+  --radius-2xl: #{tokens.$radius-2xl};
+  --radius-full: #{tokens.$radius-full};
+
+  // Shadows
+  --shadow-sm: #{tokens.$shadow-sm};
+  --shadow-md: #{tokens.$shadow-md};
+  --shadow-lg: #{tokens.$shadow-lg};
+  --shadow-xl: #{tokens.$shadow-xl};
+
+  // Transitions
+  --transition-fast: #{tokens.$transition-fast};
+  --transition-base: #{tokens.$transition-base};
+  --transition-slow: #{tokens.$transition-slow};
+
+  // Typography
+  --font-family-heading: #{tokens.$font-family-heading};
+  --font-family-body: #{tokens.$font-family-body};
+
+  --font-size-xs: #{tokens.$font-size-xs};
+  --font-size-sm: #{tokens.$font-size-sm};
+  --font-size-base: #{tokens.$font-size-base};
+  --font-size-lg: #{tokens.$font-size-lg};
+  --font-size-xl: #{tokens.$font-size-xl};
+  --font-size-2xl: #{tokens.$font-size-2xl};
+  --font-size-3xl: #{tokens.$font-size-3xl};
+  --font-size-4xl: #{tokens.$font-size-4xl};
+  --font-size-5xl: #{tokens.$font-size-5xl};
+  --font-size-6xl: #{tokens.$font-size-6xl};
+  --font-size-7xl: #{tokens.$font-size-7xl};
+
+  --font-weight-light: #{tokens.$font-weight-light};
+  --font-weight-normal: #{tokens.$font-weight-normal};
+  --font-weight-medium: #{tokens.$font-weight-medium};
+  --font-weight-semibold: #{tokens.$font-weight-semibold};
+  --font-weight-bold: #{tokens.$font-weight-bold};
+  --font-weight-extrabold: #{tokens.$font-weight-extrabold};
+
+  --line-height-tight: #{tokens.$line-height-tight};
+  --line-height-normal: #{tokens.$line-height-normal};
+  --line-height-relaxed: #{tokens.$line-height-relaxed};
+
+  // Component Tokens
+  --card-padding: #{tokens.$card-padding};
+  --card-radius: #{tokens.$card-radius};
+  --card-shadow: #{tokens.$card-shadow};
+
+  --button-height: #{tokens.$button-height};
+  --button-height-sm: #{tokens.$button-height-sm};
+  --button-height-lg: #{tokens.$button-height-lg};
+  --button-radius: #{tokens.$button-radius};
+
+  --touch-target-min: #{tokens.$touch-target-min};
+
+  // Glassmorphism
+  --glass-background: #{tokens.$glass-background};
+  --glass-border: #{tokens.$glass-border};
+  --glass-blur: #{tokens.$glass-blur};
+}
+
+// --------------------------------------------
+// DARK MODE VARIABLES
+// --------------------------------------------
+[data-theme='dark'] {
+  // Colors - Primary (desaturated for dark mode)
+  --color-primary: #{tokens.$dark-primary};
+  --color-primary-light: #C39BD3;
+  --color-primary-dark: #7D3C98;
+  --color-accent: #{tokens.$dark-accent};
+  --color-accent-light: #F5D685;
+
+  // Colors - Transport (slightly desaturated)
+  --color-mtr: #8B5CF6;
+  --color-bus: #ED974A;
+  --color-interchange: #A569BD;
+
+  // Colors - Status (desaturated)
+  --color-success: #5DB560;
+  --color-warning: #ED974A;
+  --color-error: #C03B40;
+  --color-info: #A8E5F0;
+
+  // Colors - Surface
+  --color-surface: #{tokens.$dark-surface};
+  --color-background: #{tokens.$dark-background};
+  --color-text-primary: #{tokens.$dark-text-primary};
+  --color-text-secondary: #{tokens.$dark-text-secondary};
+  --color-text-disabled: #{tokens.$color-text-disabled};
+  --color-border: #{tokens.$dark-border};
+  --color-divider: #{tokens.$dark-divider};
+
+  // Shadows (stronger for dark mode)
+  --shadow-sm: #{tokens.$shadow-sm-dark};
+  --shadow-md: #{tokens.$shadow-md-dark};
+  --shadow-lg: #{tokens.$shadow-lg-dark};
+
+  // Glassmorphism (darker)
+  --glass-background: #{tokens.$glass-background-dark};
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+// --------------------------------------------
+// SYSTEM PREFERENCE DARK MODE
+// (Disabled - forcing light mode for consistency)
+// --------------------------------------------
+// @media (prefers-color-scheme: dark) {
+//   :root:not([data-theme='light']) {
+//     // Same as [data-theme='dark'] above
+//     --color-primary: #{tokens.$dark-primary};
+//     --color-primary-light: #C39BD3;
+//     --color-primary-dark: #7D3C98;
+//     --color-accent: #{tokens.$dark-accent};
+//     --color-accent-light: #F5D685;
+//
+//     --color-mtr: #8B5CF6;
+//     --color-bus: #ED974A;
+//     --color-interchange: #A569BD;
+//
+//     --color-success: #5DB560;
+//     --color-warning: #ED974A;
+//     --color-error: #C03B40;
+//     --color-info: #A8E5F0;
+//
+//     --color-surface: #{tokens.$dark-surface};
+//     --color-background: #{tokens.$dark-background};
+//     --color-text-primary: #{tokens.$dark-text-primary};
+//     --color-text-secondary: #{tokens.$dark-text-secondary};
+//     --color-border: #{tokens.$dark-border};
+//     --color-divider: #{tokens.$dark-divider};
+//
+//     --shadow-sm: #{tokens.$shadow-sm-dark};
+//     --shadow-md: #{tokens.$shadow-md-dark};
+//     --shadow-lg: #{tokens.$shadow-lg-dark};
+//
+//     --glass-background: #{tokens.$glass-background-dark};
+//     --glass-border: rgba(255, 255, 255, 0.08);
+//   }
+// }
+
+// --------------------------------------------
+// UTILITY CLASSES
+// --------------------------------------------
+
+// Text utilities
+.text-primary { color: var(--color-text-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-disabled { color: var(--color-text-disabled); }
+
+// Background utilities
+.bg-primary { background-color: var(--color-primary); }
+.bg-accent { background-color: var(--color-accent); }
+.bg-surface { background-color: var(--color-surface); }
+.bg-background { background-color: var(--color-background); }
+
+// Spacing utilities (margin)
+.m-0 { margin: var(--space-0); }
+.m-1 { margin: var(--space-1); }
+.m-2 { margin: var(--space-2); }
+.m-3 { margin: var(--space-3); }
+.m-4 { margin: var(--space-4); }
+
+.mt-0 { margin-top: var(--space-0); }
+.mt-1 { margin-top: var(--space-1); }
+.mt-2 { margin-top: var(--space-2); }
+.mt-3 { margin-top: var(--space-3); }
+.mt-4 { margin-top: var(--space-4); }
+
+.mb-0 { margin-bottom: var(--space-0); }
+.mb-1 { margin-bottom: var(--space-1); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-3 { margin-bottom: var(--space-3); }
+.mb-4 { margin-bottom: var(--space-4); }
+
+// Spacing utilities (padding)
+.p-0 { padding: var(--space-0); }
+.p-1 { padding: var(--space-1); }
+.p-2 { padding: var(--space-2); }
+.p-3 { padding: var(--space-3); }
+.p-4 { padding: var(--space-4); }
+
+// Border radius utilities
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-xl { border-radius: var(--radius-xl); }
+.rounded-full { border-radius: var(--radius-full); }
+
+// Shadow utilities
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-xl { box-shadow: var(--shadow-xl); }

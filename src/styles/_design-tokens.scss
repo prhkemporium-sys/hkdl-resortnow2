@@ -1,0 +1,192 @@
+// ============================================
+// HKDL Resort Now - Design Tokens
+// Disney-themed Design System
+// ============================================
+
+// --------------------------------------------
+// 1. DISNEY BRAND COLORS
+// --------------------------------------------
+$disney-hk-purple: #690e7f;
+$disney-diamond-blue: #BFF5FD;
+$disney-gold: #F3CC64;
+$disney-oxford-blue: #12194A;
+
+// --------------------------------------------
+// 2. SEMANTIC COLORS (Light Mode)
+// --------------------------------------------
+$color-primary: $disney-hk-purple;
+$color-primary-light: #9B4FB8;
+$color-primary-dark: #4A0A5C;
+
+$color-accent: $disney-gold;
+$color-accent-light: #F9E6A8;
+
+// Transport Colors
+$color-mtr: $disney-hk-purple;
+$color-bus: #E65C00; // Warm Orange
+$color-interchange: #8B5CF6; // Lighter Purple
+
+// Status Colors
+$color-success: #4CAF50;
+$color-warning: #FF8C42;
+$color-error: #B12228; // Disney Red
+$color-info: $disney-diamond-blue;
+
+// Neutral Colors
+$color-surface: #FFFFFF;
+$color-background: #FAFAFA;
+$color-text-primary: #1A1A1A;
+$color-text-secondary: #4A4A4A;
+$color-text-disabled: #9E9E9E;
+$color-border: #E0E0E0;
+$color-divider: #F5F5F5;
+
+// --------------------------------------------
+// 3. DARK MODE COLORS
+// --------------------------------------------
+$dark-primary: #A569BD;
+$dark-accent: #E6C557;
+$dark-surface: #1E1E1E;
+$dark-background: #121212;
+$dark-text-primary: #E2E8F0;
+$dark-text-secondary: #A0AEC0;
+$dark-border: #2D3748;
+$dark-divider: #1A202C;
+
+// --------------------------------------------
+// 4. GRADIENTS
+// --------------------------------------------
+$gradient-disney-blue: linear-gradient(135deg, $disney-hk-purple 0%, $disney-diamond-blue 100%);
+$gradient-disney-sunset: linear-gradient(135deg, #FF8C42 0%, $disney-gold 100%);
+$gradient-nighttime: linear-gradient(135deg, #2b1055 0%, #7597de 100%);
+$gradient-daytime: linear-gradient(135deg, #f12711 0%, #f5af19 100%);
+$gradient-interactive: linear-gradient(135deg, #4FB3D4 0%, $disney-diamond-blue 100%);
+
+// Weather Gradients
+$gradient-weather-sunny: linear-gradient(180deg, #FF8C42 0%, $disney-gold 100%);
+$gradient-weather-cloudy: linear-gradient(180deg, #718096 0%, #A0AEC0 100%);
+$gradient-weather-rainy: linear-gradient(180deg, #4FB3D4 0%, $disney-hk-purple 100%);
+$gradient-weather-default: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+
+// --------------------------------------------
+// 5. SPACING SCALE (8px base)
+// --------------------------------------------
+$space-0: 0;
+$space-1: 0.5rem;   // 8px
+$space-2: 1rem;     // 16px
+$space-3: 1.5rem;   // 24px
+$space-4: 2rem;     // 32px
+$space-5: 2.5rem;   // 40px
+$space-6: 3rem;     // 48px
+$space-8: 4rem;     // 64px
+$space-10: 5rem;    // 80px
+
+// --------------------------------------------
+// 6. BORDER RADIUS
+// --------------------------------------------
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 20px;
+$radius-2xl: 24px;
+$radius-full: 9999px;
+
+// --------------------------------------------
+// 7. SHADOWS
+// --------------------------------------------
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+$shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+
+// Dark mode shadows (lighter)
+$shadow-sm-dark: 0 1px 3px rgba(0, 0, 0, 0.3);
+$shadow-md-dark: 0 4px 6px rgba(0, 0, 0, 0.4);
+$shadow-lg-dark: 0 10px 15px rgba(0, 0, 0, 0.5);
+
+// --------------------------------------------
+// 8. TRANSITIONS
+// --------------------------------------------
+$transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+// --------------------------------------------
+// 9. BREAKPOINTS
+// --------------------------------------------
+$breakpoint-mobile: 375px;
+$breakpoint-tablet: 640px;
+$breakpoint-desktop: 1024px;
+$breakpoint-wide: 1280px;
+
+// --------------------------------------------
+// 10. Z-INDEX SCALE
+// --------------------------------------------
+$z-base: 1;
+$z-dropdown: 100;
+$z-sticky: 200;
+$z-fixed: 300;
+$z-modal-backdrop: 400;
+$z-modal: 500;
+$z-popover: 600;
+$z-tooltip: 700;
+
+// --------------------------------------------
+// 11. TYPOGRAPHY SCALE
+// --------------------------------------------
+$font-family-heading: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-family-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+$font-size-xs: 0.75rem;    // 12px
+$font-size-sm: 0.875rem;   // 14px
+$font-size-base: 1rem;     // 16px
+$font-size-lg: 1.125rem;   // 18px
+$font-size-xl: 1.25rem;    // 20px
+$font-size-2xl: 1.5rem;    // 24px
+$font-size-3xl: 1.875rem;  // 30px
+$font-size-4xl: 2.25rem;   // 36px
+$font-size-5xl: 3rem;      // 48px
+$font-size-6xl: 3.75rem;   // 60px
+$font-size-7xl: 4.5rem;    // 72px
+
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+$font-weight-extrabold: 800;
+
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// --------------------------------------------
+// 12. COMPONENT-SPECIFIC TOKENS
+// --------------------------------------------
+
+// Cards
+$card-padding: $space-3;
+$card-radius: $radius-lg;
+$card-shadow: $shadow-md;
+
+// Buttons
+$button-height: 48px;
+$button-height-sm: 36px;
+$button-height-lg: 56px;
+$button-radius: $radius-full;
+
+// Touch Targets (WCAG compliant)
+$touch-target-min: 48px;
+
+// Animation timing
+$animation-duration-quick: 200ms;
+$animation-duration-base: 250ms;
+$animation-duration-slow: 500ms;
+
+// --------------------------------------------
+// 13. GLASSMORPHISM EFFECTS
+// --------------------------------------------
+$glass-background: rgba(255, 255, 255, 0.15);
+$glass-background-dark: rgba(30, 30, 30, 0.15);
+$glass-border: rgba(255, 255, 255, 0.18);
+$glass-blur: blur(10px);
