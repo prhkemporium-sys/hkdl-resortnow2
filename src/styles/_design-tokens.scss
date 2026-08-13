@@ -105,11 +105,15 @@ $shadow-md-dark: 0 4px 6px rgba(0, 0, 0, 0.4);
 $shadow-lg-dark: 0 10px 15px rgba(0, 0, 0, 0.5);
 
 // --------------------------------------------
-// 8. TRANSITIONS
+// 8. TRANSITIONS (Apple-fluid easing)
 // --------------------------------------------
-$transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-$transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-$transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+$ease-standard:   cubic-bezier(0.32, 0.72, 0, 1);
+$ease-decelerate: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-accelerate: cubic-bezier(0.7, 0, 0.84, 0);
+
+$transition-fast: 180ms $ease-standard;
+$transition-base: 280ms $ease-standard;
+$transition-slow: 420ms $ease-standard;
 
 // --------------------------------------------
 // 9. BREAKPOINTS
@@ -134,8 +138,10 @@ $z-tooltip: 700;
 // --------------------------------------------
 // 11. TYPOGRAPHY SCALE
 // --------------------------------------------
-$font-family-heading: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-$font-family-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+// SF-first system stack (Apple-style typography, no web font download).
+$font-family-system: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+$font-family-heading: $font-family-system;
+$font-family-body: $font-family-system;
 
 $font-size-xs: 0.75rem;    // 12px
 $font-size-sm: 0.875rem;   // 14px
@@ -186,7 +192,10 @@ $animation-duration-slow: 500ms;
 // --------------------------------------------
 // 13. GLASSMORPHISM EFFECTS
 // --------------------------------------------
-$glass-background: rgba(255, 255, 255, 0.15);
-$glass-background-dark: rgba(30, 30, 30, 0.15);
-$glass-border: rgba(255, 255, 255, 0.18);
-$glass-blur: blur(10px);
+// The generic .glass utility sits over saturated gradients with white text
+// (weather hero, detail cards) — keep this low-alpha so the gradient shows through.
+// Toolbar/nav/info-panels use their own inline rgba() values instead of this token.
+$glass-background: rgba(255, 255, 255, 0.18);
+$glass-background-dark: rgba(30, 30, 30, 0.18);
+$glass-border: rgba(255, 255, 255, 0.22);
+$glass-blur: blur(12px) saturate(160%);

@@ -998,9 +998,48 @@ export class TransportComponent implements OnInit, OnDestroy {
         </div>
       }
 
+      <!-- Park Operating Hours -->
+      <section class="info-panel hours-panel" role="region" aria-labelledby="hours-title">
+        <div class="info-panel-header">
+          <mat-icon>schedule</mat-icon>
+          <h3 id="hours-title">本日のパーク運営時間</h3>
+        </div>
+        @if (parkHours) {
+          <div class="hours-line">
+            <span class="hours-value">{{ parkHours.open }}</span>
+            <span class="hours-sep">–</span>
+            <span class="hours-value">{{ parkHours.close }}</span>
+          </div>
+        } @else {
+          <div class="info-empty">本日の情報がありません</div>
+        }
+      </section>
+
+      <!-- Ongoing Events -->
+      <section class="info-panel events-panel" role="region" aria-labelledby="events-title">
+        <div class="info-panel-header">
+          <mat-icon>celebration</mat-icon>
+          <h3 id="events-title">開催中イベント</h3>
+        </div>
+        @if (events.length > 0) {
+          <ul class="events-list">
+            @for (event of events; track event.name) {
+              <li class="event-item">
+                <span class="event-name">{{ event.name }}</span>
+                @if (event.date) {
+                  <span class="event-date">{{ event.date }}</span>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="info-empty">開催中のイベントはありません</div>
+        }
+      </section>
+
       <!-- Hero Weather Card with Glassmorphism -->
-      <div class="weather-hero" [class]="getWeatherClass()" role="region" aria-labelledby="weather-title">
-        <div class="hero-content glass">
+      <div class="weather-hero" [ngClass]="getWeatherClass()" role="region" aria-labelledby="weather-title">
+        <div class="hero-content">
           <div class="location" id="weather-title">
             <mat-icon>location_on</mat-icon>
             香港ディズニーランド
@@ -1127,6 +1166,119 @@ export class TransportComponent implements OnInit, OnDestroy {
       }
     }
 
+    // === INFO PANELS (Park Hours & Events) — translucent material ===
+    .info-panel {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-left: 4px solid var(--color-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3);
+      margin-bottom: var(--space-3);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.08);
+    }
+
+    .info-panel-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      margin-bottom: var(--space-2);
+
+      mat-icon {
+        color: var(--color-primary);
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+      }
+
+      h3 {
+        margin: 0;
+        font-family: var(--font-family-heading);
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-text-primary);
+      }
+    }
+
+    .hours-panel {
+      border-left-color: #10b981;
+
+      .info-panel-header mat-icon {
+        color: #10b981;
+      }
+    }
+
+    .hours-line {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-2) 0;
+      font-family: var(--font-family-heading);
+
+      .hours-value {
+        font-size: 2rem;
+        font-weight: var(--font-weight-bold);
+        color: var(--color-text-primary);
+        letter-spacing: 0.02em;
+      }
+
+      .hours-sep {
+        font-size: 1.4rem;
+        color: var(--color-text-secondary);
+      }
+    }
+
+    .events-panel {
+      border-left-color: #ec4899;
+
+      .info-panel-header mat-icon {
+        color: #ec4899;
+      }
+    }
+
+    .events-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .event-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2);
+      background: linear-gradient(135deg, #fdf2f8, #fce7f3);
+      border-radius: var(--radius-md);
+      border: 1px solid #fbcfe8;
+
+      .event-name {
+        flex: 1;
+        font-weight: 600;
+        color: #831843;
+        font-size: var(--font-size-base);
+      }
+
+      .event-date {
+        font-size: var(--font-size-sm);
+        color: #9d174d;
+        white-space: nowrap;
+      }
+    }
+
+    .info-empty {
+      padding: var(--space-2);
+      color: var(--color-text-disabled);
+      font-style: italic;
+      font-size: var(--font-size-sm);
+      text-align: center;
+    }
+
     // === WEATHER HERO CARD ===
     .weather-hero {
       position: relative;
@@ -1180,15 +1332,18 @@ export class TransportComponent implements OnInit, OnDestroy {
       z-index: 1;
       text-align: center;
       color: white;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
       width: 100%;
       padding: var(--space-4);
       border-radius: var(--radius-xl);
 
       &.glass {
-        background: var(--glass-background);
-        backdrop-filter: var(--glass-blur);
-        -webkit-backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--glass-border);
+        // Dark scrim (iOS Weather-widget pattern) — restores contrast for white text
+        // uniformly across all four weather gradients, including light-luminance ones.
+        background: rgba(0, 0, 0, 0.18);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.22);
       }
     }
 
@@ -1444,11 +1599,15 @@ export class WeatherComponent implements OnInit, OnDestroy {
   private showsDataService = inject(ShowsDataService);
   private weatherSubscription?: Subscription;
   private forecastSubscription?: Subscription;
+  private parkHoursSubscription?: Subscription;
+  private eventsSubscription?: Subscription;
 
   currentTemp: string | number = '--';
   currentHumidity: string | number = '--';
   forecast: ForecastItem[] = [];
   noticeText: string = '';
+  parkHours: { open: string; close: string } | null = null;
+  events: { name: string; date: string }[] = [];
 
   getWeatherClass(): string {
     if (!this.forecast.length) return 'default';
@@ -1499,6 +1658,16 @@ export class WeatherComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.loadNotice();
+
+    this.parkHoursSubscription = this.showsDataService.getParkHours().subscribe({
+      next: (hours) => { this.parkHours = hours; },
+      error: (error) => { console.error('Error loading park hours:', error); }
+    });
+
+    this.eventsSubscription = this.showsDataService.getEvents().subscribe({
+      next: (events) => { this.events = events; },
+      error: (error) => { console.error('Error loading events:', error); }
+    });
 
     this.weatherSubscription = this.dataService.getCurrentWeather().subscribe({
       next: (res) => {
@@ -1553,6 +1722,12 @@ export class WeatherComponent implements OnInit, OnDestroy {
     if (this.forecastSubscription) {
       this.forecastSubscription.unsubscribe();
     }
+    if (this.parkHoursSubscription) {
+      this.parkHoursSubscription.unsubscribe();
+    }
+    if (this.eventsSubscription) {
+      this.eventsSubscription.unsubscribe();
+    }
   }
 }
 
@@ -1565,7 +1740,7 @@ export class WeatherComponent implements OnInit, OnDestroy {
   standalone: true,
   imports: [CommonModule, MatToolbarModule, MatIconModule, TransportComponent, WeatherComponent, ShowComponent],
   template: `
-    <mat-toolbar color="primary" class="header">
+    <mat-toolbar class="header">
       <span>HKDL ResortNow by Emporium</span>
       <span class="spacer"></span>
       <a href="https://lit.link/ja/hkemporium" target="_blank" rel="noopener noreferrer" class="return-link">
@@ -1576,10 +1751,10 @@ export class WeatherComponent implements OnInit, OnDestroy {
 
     <div class="content">
       @if (activeTab === 0) {
-        <app-transport></app-transport>
+        <app-weather></app-weather>
       }
       @if (activeTab === 1) {
-        <app-weather></app-weather>
+        <app-transport></app-transport>
       }
       @if (activeTab === 2) {
         <app-show></app-show>
@@ -1588,10 +1763,10 @@ export class WeatherComponent implements OnInit, OnDestroy {
 
     <div class="bottom-nav">
       <div class="nav-item" [class.active]="activeTab === 0" (click)="activeTab = 0">
-        <mat-icon>directions_transit</mat-icon><span>交通情報</span>
+        <mat-icon>info</mat-icon><span>本日のパーク・天気</span>
       </div>
       <div class="nav-item" [class.active]="activeTab === 1" (click)="activeTab = 1">
-        <mat-icon>wb_sunny</mat-icon><span>天気</span>
+        <mat-icon>directions_transit</mat-icon><span>交通情報</span>
       </div>
       <div class="nav-item" [class.active]="activeTab === 2" (click)="activeTab = 2">
         <mat-icon>schedule</mat-icon><span>ショースケジュール</span>
@@ -1601,30 +1776,60 @@ export class WeatherComponent implements OnInit, OnDestroy {
   styles: [`
     :host { display: flex; flex-direction: column; height: 100vh; }
     .header {
-      position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: sticky; top: 0; z-index: 100;
       display: flex; align-items: center;
+      background: color-mix(in oklab, var(--color-primary) 55%, transparent);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 6px 24px rgba(105, 14, 127, 0.18);
+      color: #fff;
+      font-weight: 600;
+      letter-spacing: 0.005em;
     }
     .spacer { flex: 1; }
     .return-link {
       display: flex; align-items: center; gap: 6px;
-      color: rgba(255, 255, 255, 0.95); text-decoration: none; font-size: 14px;
-      padding: 6px 12px; border-radius: 4px;
-      transition: all 0.2s;
-      background-color: rgba(255, 255, 255, 0.15);
-      &:hover { background-color: rgba(255, 255, 255, 0.25); }
+      color: #1f2937; text-decoration: none; font-size: 14px; font-weight: 600;
+      padding: 6px 12px; border-radius: 999px;
+      transition: transform var(--transition-fast), background-color var(--transition-fast);
+      background-color: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      &:hover { background-color: #ffffff; color: #000; }
+      &:active { transform: scale(0.96); }
       mat-icon { font-size: 20px; width: 20px; height: 20px; }
     }
-    .content { flex: 1; overflow-y: auto; background: #FAFAFA; }
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      background: #FAFAFA;
+      // Scroll-edge fade under the sticky header (§12 — no hard divider)
+      mask-image: linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent);
+    }
     .bottom-nav {
       position: fixed; bottom: 0; width: 100%; height: 80px;
-      background: white; display: flex; justify-content: space-around;
-      align-items: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 1000;
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+      display: flex; justify-content: space-around;
+      align-items: center; box-shadow: 0 -6px 20px rgba(0,0,0,0.05); z-index: 1000;
+      padding: 6px;
       .nav-item {
         display: flex; flex-direction: column; align-items: center;
         justify-content: center; color: #999; width: 100%; height: 100%;
-        cursor: pointer; transition: 0.2s;
-        span { font-size: 11px; margin-top: 4px; }
-        &.active { color: #690e7f; mat-icon { transform: translateY(-2px); } }
+        cursor: pointer;
+        border-radius: 16px;
+        transition: transform var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
+        span { font-size: 11px; margin-top: 4px; letter-spacing: 0.01em; }
+        mat-icon { transition: transform var(--transition-fast); }
+        &.active {
+          color: var(--color-primary);
+          background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+          mat-icon { transform: translateY(-2px); }
+        }
+        &:active { transform: scale(0.96); }
       }
     }
   `]

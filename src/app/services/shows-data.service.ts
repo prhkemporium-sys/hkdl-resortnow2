@@ -13,6 +13,9 @@ export class ShowsDataService {
   private cache: { data: ShowsByDate; timestamp: number } | null = null;
   private closuresCache: { data: { [date: string]: string[] }; timestamp: number } | null = null;
   private noticeCache: { data: { transport: string; weather: string; shows: string }; timestamp: number } | null = null;
+  private eventsCache: { data: { name: string; date: string }[]; timestamp: number } | null = null;
+  private showLogosCache: { data: { emojis: { [name: string]: string }; durations: { [name: string]: number } }; timestamp: number } | null = null;
+  private parkHoursCache: { data: { open: string; close: string } | null; timestamp: number } | null = null;
   private headersValidated = false;
 
   getShows(): Observable<ShowsByDate> {
@@ -89,6 +92,114 @@ export class ShowsDataService {
         return of({ transport: '', weather: '', shows: '' });
       })
     );
+  }
+
+  getEvents(): Observable<{ name: string; date: string }[]> {
+    if (this.eventsCache && Date.now() - this.eventsCache.timestamp <= environment.cacheDurationMs) {
+      return of(this.eventsCache.data);
+    }
+
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${environment.googleSheetsId}/values/event!A2:B8?key=${environment.googleSheetsApiKey}`;
+
+    return this.http.get<{ values?: string[][] }>(url).pipe(
+      map(response => {
+        const rows = response.values || [];
+        const events = rows
+          .map(row => ({
+            name: (row[0] || '').trim(),
+            date: (row[1] || '').trim()
+          }))
+          .filter(e => e.name.length > 0);
+
+        this.eventsCache = { data: events, timestamp: Date.now() };
+        return events;
+      }),
+      catchError(error => {
+        console.error('Error fetching events from Google Sheets:', error);
+        return of([]);
+      })
+    );
+  }
+
+  getShowLogos(): Observable<{ emojis: { [name: string]: string }; durations: { [name: string]: number } }> {
+    if (this.showLogosCache && Date.now() - this.showLogosCache.timestamp <= environment.cacheDurationMs) {
+      return of(this.showLogosCache.data);
+    }
+
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${environment.googleSheetsId}/values/showlogo!A2:C20?key=${environment.googleSheetsApiKey}`;
+
+    return this.http.get<{ values?: string[][] }>(url).pipe(
+      map(response => {
+        const rows = response.values || [];
+        const emojis: { [name: string]: string } = {};
+        const durations: { [name: string]: number } = {};
+        rows.forEach(row => {
+          const name = (row[0] || '').trim();
+          const emoji = (row[1] || '').trim();
+          const durationRaw = (row[2] || '').trim();
+          if (!name) return;
+          if (emoji) emojis[name] = emoji;
+          const durationNum = parseInt(durationRaw, 10);
+          if (!isNaN(durationNum) && durationNum > 0) {
+            durations[name] = durationNum;
+          }
+        });
+
+        const data = { emojis, durations };
+        this.showLogosCache = { data, timestamp: Date.now() };
+        return data;
+      }),
+      catchError(error => {
+        console.error('Error fetching show logos from Google Sheets:', error);
+        return of({ emojis: {}, durations: {} });
+      })
+    );
+  }
+
+  getParkHours(): Observable<{ open: string; close: string } | null> {
+    if (this.parkHoursCache && Date.now() - this.parkHoursCache.timestamp <= environment.cacheDurationMs) {
+      return of(this.parkHoursCache.data);
+    }
+
+    return this.fetchFromGoogleSheets().pipe(
+      map(response => {
+        const hours = this.extractTodaysHours(response);
+        this.parkHoursCache = { data: hours, timestamp: Date.now() };
+        return hours;
+      }),
+      catchError(error => {
+        console.error('Error fetching park hours from Google Sheets:', error);
+        return of(null);
+      })
+    );
+  }
+
+  private extractTodaysHours(response: ShowsApiResponse): { open: string; close: string } | null {
+    if (!response.values || !Array.isArray(response.values)) {
+      return null;
+    }
+
+    const todayKey = this.formatDateKey(new Date());
+
+    for (let i = 1; i < response.values.length; i++) {
+      const row = response.values[i];
+      if (!row || row.length < 3) continue;
+
+      const dateStr = row[0];
+      const open = (row[1] || '').trim();
+      const close = (row[2] || '').trim();
+
+      if (!dateStr || !open || !close) continue;
+
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) continue;
+
+      if (this.formatDateKey(date) === todayKey) {
+        return { open, close };
+      }
+    }
+
+    return null;
   }
 
   private getCachedNotices(): { transport: string; weather: string; shows: string } | null {

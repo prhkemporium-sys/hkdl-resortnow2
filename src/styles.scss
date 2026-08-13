@@ -277,3 +277,96 @@ body {
 .mat-icon {
   font-family: 'Material Icons' !important;
 }
+
+// Apple-style pill radii for chips, toggles, button-toggles
+.mat-mdc-chip {
+  border-radius: 999px !important;
+  --mdc-chip-container-height: 34px;
+}
+
+.mat-mdc-slide-toggle .mdc-switch__track {
+  border-radius: 999px !important;
+}
+
+.mat-mdc-button-toggle-group {
+  border-radius: 999px !important;
+  overflow: hidden;
+}
+
+.mat-mdc-button-toggle {
+  --mat-standard-button-toggle-height: 40px;
+}
+
+// Dampen Material's default ripple; Apple-style press feedback is subtler
+.mat-mdc-button-persistent-ripple,
+.mat-ripple-element {
+  opacity: 0.08 !important;
+}
+
+// ============================================
+// APPLE-STYLE PRESS FEEDBACK (§1)
+// Instant scale-down on pointer-down, not release.
+// Falls back to :active where Pointer Events aren't captured.
+// ============================================
+
+button:not([disabled]),
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-flat-button,
+.mat-mdc-stroked-button,
+.mat-mdc-icon-button,
+.nav-item,
+.date-chip,
+.show-chip,
+.nav-btn {
+  transition: transform 180ms var(--ease-standard), background-color 180ms var(--ease-standard), box-shadow 180ms var(--ease-standard);
+  will-change: transform;
+
+  &:active:not([disabled]) {
+    transform: scale(0.97);
+    transition-duration: 100ms;
+  }
+}
+
+// ============================================
+// A11Y FALLBACKS (§14)
+// prefers-reduced-motion is already handled in _typography and _animations.
+// ============================================
+
+@media (prefers-reduced-transparency: reduce) {
+  .header,
+  .bottom-nav,
+  .info-panel,
+  .glass,
+  .hero-content.glass,
+  .detail-card.glass {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--color-surface) !important;
+    border: 1px solid var(--color-border) !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --color-text-secondary: #1f2937;
+    --color-border: #000;
+  }
+
+  .header,
+  .bottom-nav,
+  .info-panel {
+    backdrop-filter: none !important;
+    background: var(--color-surface) !important;
+    border: 1px solid #000 !important;
+  }
+}
+
+// Fallback for browsers without backdrop-filter support
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .header,
+  .bottom-nav,
+  .info-panel {
+    background: var(--color-surface) !important;
+  }
+}

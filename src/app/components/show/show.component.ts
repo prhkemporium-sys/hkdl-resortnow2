@@ -1,18 +1,21 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ElementRef, ViewChildren, QueryList, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ShowsDataService } from '../../services/shows-data.service';
 import { Show, ShowsByDate, ShowType } from '../../models/show.model';
+import { pressPop, springIn } from '../../utils/motion';
 
 @Component({
   selector: 'app-show',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule, MatChipsModule],
+  imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule, MatChipsModule, MatButtonToggleModule, MatSlideToggleModule],
   template: `
     <div class="page-shell">
       <div class="page-container">
@@ -65,21 +68,44 @@ import { Show, ShowsByDate, ShowType } from '../../models/show.model';
             </button>
           </div>
 
+          <!-- View Mode Toggle -->
+          <div class="view-mode-toggle">
+            <mat-button-toggle-group [value]="viewMode" (change)="setViewMode($event.value)" aria-label="表示モード">
+              <mat-button-toggle value="byTime">
+                <mat-icon>schedule</mat-icon>
+                <span>時刻順</span>
+              </mat-button-toggle>
+              <mat-button-toggle value="byShow">
+                <mat-icon>view_agenda</mat-icon>
+                <span>ショー別</span>
+              </mat-button-toggle>
+            </mat-button-toggle-group>
+
+            <mat-slide-toggle *ngIf="viewMode === 'byTime'"
+                              class="overlap-toggle"
+                              [checked]="overlapCheckEnabled"
+                              (change)="toggleOverlapCheck($event.checked)">
+              時間被り確認
+            </mat-slide-toggle>
+          </div>
+
           <!-- Show Name Filters (Multiple Selection) -->
           <div class="filters">
             <mat-chip-set aria-label="Show name filters (multiple selection)">
-              <mat-chip-option [selected]="selectedShowNames.length === 0" (click)="setShowFilter('all')">
+              <mat-chip-option [selected]="selectedShowNames.length === 0"
+                               (click)="onChipTap($event); setShowFilter('all')">
                 すべて
               </mat-chip-option>
 
               <mat-chip-option *ngFor="let showName of uniqueShowNames"
                                [selected]="isShowSelected(showName)"
-                               (click)="setShowFilter(showName)"
+                               (click)="onChipTap($event); setShowFilter(showName)"
                                [style.background-color]="isShowSelected(showName) ? showColors[showName] : 'transparent'"
                                [style.border-color]="showColors[showName]"
                                [style.color]="isShowSelected(showName) ? 'white' : showColors[showName]"
                                class="show-chip">
                 {{ showName }}
+                <span class="chip-emoji" *ngIf="showEmojis[showName]" aria-hidden="true">{{ showEmojis[showName] }}</span>
               </mat-chip-option>
             </mat-chip-set>
           </div>
@@ -117,15 +143,16 @@ import { Show, ShowsByDate, ShowType } from '../../models/show.model';
               </h2>
             </div>
             <span class="day-header-count">
-              {{ filteredShows.length }}公演
+              {{ viewMode === 'byShow' ? groupedShows.length + '演目' : filteredShows.length + '公演' }}
             </span>
           </div>
 
-          <div class="shows-grid">
-            <article *ngFor="let show of filteredShows; let idx = index"
+          <!-- BY TIME (default) -->
+          <div class="shows-grid" *ngIf="viewMode === 'byTime'">
+            <article #cardRef
+                     *ngFor="let show of filteredShows; let idx = index"
                      class="show-card"
                      [ngClass]="show.type"
-                     [style.animation-delay]="(idx * 40) + 'ms'"
                      [style.border-left-color]="showColors[show.title]"
                      [style.background]="'linear-gradient(135deg, ' + showColors[show.title] + '15, ' + showColors[show.title] + '08)'">
 
@@ -161,7 +188,66 @@ import { Show, ShowsByDate, ShowType } from '../../models/show.model';
                     <span class="meta-value">{{ show.time }}</span>
                   </div>
                 </div>
+                <div class="meta-item" *ngIf="showDurations[show.title]">
+                  <mat-icon>timelapse</mat-icon>
+                  <div class="meta-text">
+                    <span class="meta-label">上演時間</span>
+                    <span class="meta-value">{{ showDurations[show.title] }}分</span>
+                  </div>
+                </div>
               </div>
+
+              <div class="overlap-warning" *ngIf="overlapWarnings[show.id]?.length">
+                <mat-icon>warning_amber</mat-icon>
+                <div class="overlap-warning-body">
+                  <span class="overlap-warning-title">時間被りの可能性</span>
+                  <span class="overlap-warning-list">
+                    {{ overlapWarnings[show.id].join(' / ') }}
+                  </span>
+                </div>
+              </div>
+
+              @if (showEmojis[show.title]) {
+                <span class="show-emoji" aria-hidden="true">{{ showEmojis[show.title] }}</span>
+              }
+
+            </article>
+          </div>
+
+          <!-- BY SHOW (grouped) -->
+          <div class="shows-grid" *ngIf="viewMode === 'byShow'">
+            <article #cardRef
+                     *ngFor="let group of groupedShows; let idx = index"
+                     class="show-card"
+                     [ngClass]="group.type"
+                     [style.border-left-color]="showColors[group.title]"
+                     [style.background]="'linear-gradient(135deg, ' + showColors[group.title] + '15, ' + showColors[group.title] + '08)'">
+
+              <div class="show-card-top">
+                <div class="badge-group">
+                  <span class="pill pill-main" *ngIf="group.section">
+                    {{ group.section }}
+                  </span>
+                  <span class="pill pill-subtle" *ngIf="showDurations[group.title]">
+                    {{ showDurations[group.title] }}分
+                  </span>
+                </div>
+                <span class="times-count">{{ group.times.length }}回</span>
+              </div>
+
+              <h3 class="show-title">{{ group.title }}</h3>
+
+              <p class="show-description" *ngIf="group.description">
+                {{ group.description }}
+              </p>
+
+              <div class="times-grid">
+                <span *ngFor="let t of group.times" class="time-chip">{{ t }}</span>
+              </div>
+
+              @if (showEmojis[group.title]) {
+                <span class="show-emoji" aria-hidden="true">{{ showEmojis[group.title] }}</span>
+              }
 
             </article>
           </div>
@@ -476,11 +562,96 @@ import { Show, ShowsByDate, ShowType } from '../../models/show.model';
       font-weight: 600 !important;
     }
 
+    .chip-emoji {
+      margin-left: 6px;
+      font-size: 1rem;
+      line-height: 1;
+      vertical-align: middle;
+    }
+
     .chip-icon {
       margin-right: 4px;
       font-size: 18px;
       width: 18px;
       height: 18px;
+    }
+
+    /* VIEW MODE TOGGLE */
+
+    .view-mode-toggle {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-1);
+    }
+
+    .overlap-toggle {
+      font-family: var(--font-family-heading);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1f2933;
+    }
+
+    .view-mode-toggle mat-button-toggle-group {
+      border-radius: 999px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(148, 163, 184, 0.25);
+    }
+
+    .view-mode-toggle mat-button-toggle {
+      font-family: var(--font-family-heading);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .view-mode-toggle mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    /* GROUPED VIEW */
+
+    .times-count {
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      border: 1px solid #c7d2fe;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .times-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: auto;
+      padding-top: var(--space-2);
+      padding-right: 40px;
+    }
+
+    .time-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 56px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
+      font-family: var(--font-family-heading);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
     }
 
     /* SKELETON LOADING */
@@ -635,10 +806,12 @@ import { Show, ShowsByDate, ShowType } from '../../models/show.model';
       isolation: isolate;
       color: #111827;
       background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), #f9fafb);
-      animation: card-in 200ms ease-out forwards;
+      // Mount state — springIn() in motion.ts animates to opacity 1 / translateY 0
       opacity: 0;
-      transform: translateY(8px) scale(0.99);
+      transform: translateY(12px) scale(0.98);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
       border-left: 6px solid;
+      will-change: transform, opacity;
     }
 
     .show-card::before {
@@ -812,6 +985,66 @@ import { Show, ShowsByDate, ShowType } from '../../models/show.model';
       color: #111827;
     }
 
+    /* OVERLAP WARNING */
+
+    .overlap-warning {
+      margin-top: var(--space-2);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      background: linear-gradient(135deg, #fff7ed, #ffedd5);
+      border: 1px solid #fdba74;
+      border-radius: 12px;
+      color: #7c2d12;
+      padding-right: 44px;
+    }
+
+    .overlap-warning mat-icon {
+      color: #c2410c;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .overlap-warning-body {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .overlap-warning-title {
+      font-family: var(--font-family-heading);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #9a3412;
+    }
+
+    .overlap-warning-list {
+      font-size: 0.78rem;
+      color: #7c2d12;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    /* SHOW EMOJI INDICATOR */
+
+    .show-emoji {
+      position: absolute;
+      bottom: var(--space-2);
+      right: var(--space-2);
+      font-size: 1.8rem;
+      line-height: 1;
+      pointer-events: none;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+      z-index: 1;
+    }
+
     /* CLOSED FACILITIES SECTION */
 
     .closures-section {
@@ -908,11 +1141,12 @@ import { Show, ShowsByDate, ShowType } from '../../models/show.model';
 
     .refresh-shell {
       position: sticky;
-      bottom: var(--space-2);
+      bottom: calc(80px + var(--space-2));
       margin-top: var(--space-4);
       display: flex;
       justify-content: flex-end;
       pointer-events: none;
+      z-index: 900;
     }
 
     .refresh-btn {
@@ -959,12 +1193,16 @@ import { Show, ShowsByDate, ShowType } from '../../models/show.model';
 
   `]
 })
-export class ShowComponent implements OnInit, OnDestroy {
+export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
   private showsService = inject(ShowsDataService);
   private destroy$ = new Subject<void>();
 
+  @ViewChildren('cardRef', { read: ElementRef }) cardRefs!: QueryList<ElementRef<HTMLElement>>;
+
   shows: ShowsByDate = {};
   filteredShows: Show[] = [];
+  groupedShows: { title: string; times: string[]; section: string; description: string; type: ShowType; date: Date }[] = [];
+  viewMode: 'byTime' | 'byShow' = 'byTime';
   closures: { [date: string]: string[] } = {};
   closuresForSelectedDate: string[] = [];
   next7Days: Date[] = [];
@@ -973,6 +1211,18 @@ export class ShowComponent implements OnInit, OnDestroy {
   selectedShowNames: string[] = []; // Changed: track multiple selected show filters (empty = all)
   uniqueShowNames: string[] = []; // New: list of unique show names
   showColors: { [showName: string]: string } = {}; // New: color mapping for each show
+  showEmojis: { [showName: string]: string } = {};
+  showDurations: { [showName: string]: number } = {};
+  overlapCheckEnabled = true;
+  overlapWarnings: { [showId: string]: string[] } = {};
+
+  /** Titles excluded from overlap checking */
+  private readonly OVERLAP_EXCLUDED_TITLES = new Set<string>([
+    '「モーメンタス」ナイトタイム・スペクタキュラー'
+  ]);
+
+  /** Buffer minutes added to duration when checking overlaps */
+  private readonly OVERLAP_BUFFER_MIN = 15;
   loading = false;
   error: string | null = null;
   lastUpdated: Date | null = null;
@@ -982,6 +1232,34 @@ export class ShowComponent implements OnInit, OnDestroy {
     this.initializeDateSelector();
     this.loadShows();
     this.loadNotice();
+    this.loadShowEmojis();
+  }
+
+  ngAfterViewInit(): void {
+    this.animateCards();
+    this.cardRefs.changes
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.animateCards());
+  }
+
+  private animateCards(): void {
+    if (!this.cardRefs) return;
+    this.cardRefs.forEach((ref, idx) => {
+      springIn(ref.nativeElement, idx * 40);
+    });
+  }
+
+  loadShowEmojis(): void {
+    this.showsService.getShowLogos()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.showEmojis = data.emojis;
+          this.showDurations = data.durations;
+          this.recomputeOverlapWarnings();
+        },
+        error: (error) => { console.error('Error loading show emojis:', error); }
+      });
   }
 
   loadNotice(): void {
@@ -1167,6 +1445,59 @@ export class ShowComponent implements OnInit, OnDestroy {
     return this.selectedShowNames.includes(showName);
   }
 
+  setViewMode(mode: 'byTime' | 'byShow'): void {
+    if (!mode) return;
+    this.viewMode = mode;
+  }
+
+  toggleOverlapCheck(checked: boolean): void {
+    this.overlapCheckEnabled = checked;
+    this.recomputeOverlapWarnings();
+  }
+
+  onChipTap(event: Event): void {
+    const el = event.currentTarget as Element | null;
+    if (el) pressPop(el);
+  }
+
+  private timeToMinutes(hhmm: string): number {
+    const [h, m] = hhmm.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return -1;
+    return h * 60 + m;
+  }
+
+  private recomputeOverlapWarnings(): void {
+    this.overlapWarnings = {};
+    if (!this.overlapCheckEnabled) return;
+
+    // Only consider shows that have a duration AND are not in the excluded set.
+    const windows = this.filteredShows
+      .filter(s => !this.OVERLAP_EXCLUDED_TITLES.has(s.title))
+      .map(s => {
+        const dur = this.showDurations[s.title];
+        if (!dur) return null;
+        const start = this.timeToMinutes(s.time);
+        if (start < 0) return null;
+        return { show: s, start, end: start + dur + this.OVERLAP_BUFFER_MIN };
+      })
+      .filter((w): w is { show: Show; start: number; end: number } => w !== null);
+
+    for (let i = 0; i < windows.length; i++) {
+      const a = windows[i];
+      for (let j = 0; j < windows.length; j++) {
+        if (i === j) continue;
+        const b = windows[j];
+        // Same show at another time isn't a "conflict" for the user
+        if (a.show.title === b.show.title) continue;
+        // Half-open overlap: [a.start, a.end) intersects [b.start, b.end)
+        if (a.start < b.end && b.start < a.end) {
+          if (!this.overlapWarnings[a.show.id]) this.overlapWarnings[a.show.id] = [];
+          this.overlapWarnings[a.show.id].push(`${b.show.title} ${b.show.time}`);
+        }
+      }
+    }
+  }
+
   private filterShowsByDateAndType(): void {
     const dateKey = this.formatDateKey(this.selectedDate);
     let showsForDay: Show[] = this.shows[dateKey] || [];
@@ -1178,6 +1509,30 @@ export class ShowComponent implements OnInit, OnDestroy {
 
     showsForDay.sort((a: Show, b: Show) => a.time.localeCompare(b.time));
     this.filteredShows = showsForDay;
+
+    // Build grouped view: one entry per unique title, listing all its times sorted.
+    const groups = new Map<string, { title: string; times: string[]; section: string; description: string; type: ShowType; date: Date }>();
+    showsForDay.forEach(show => {
+      const existing = groups.get(show.title);
+      if (existing) {
+        existing.times.push(show.time);
+      } else {
+        groups.set(show.title, {
+          title: show.title,
+          times: [show.time],
+          section: show.section,
+          description: show.description,
+          type: show.type,
+          date: show.date
+        });
+      }
+    });
+    this.groupedShows = Array.from(groups.values()).map(g => ({
+      ...g,
+      times: g.times.slice().sort((a, b) => a.localeCompare(b))
+    }));
+
+    this.recomputeOverlapWarnings();
   }
 
   private formatDateKey(date: Date): string {

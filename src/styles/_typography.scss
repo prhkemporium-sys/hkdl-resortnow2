@@ -6,8 +6,13 @@
 @use 'design-tokens' as tokens;
 
 // --------------------------------------------
-// BASE TYPOGRAPHY
+// BASE TYPOGRAPHY (Apple-style: system font, optical sizing)
 // --------------------------------------------
+:root {
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+}
+
 body {
   font-family: var(--font-family-body);
   font-size: var(--font-size-base);
@@ -30,31 +35,37 @@ h1, h2, h3, h4, h5, h6,
   margin: 0;
 }
 
-// Display (Hero headings)
+// Display (Hero headings) — tight leading, negative tracking (§15)
 .display-1,
 .display {
   font-size: clamp(#{tokens.$font-size-4xl}, 5vw, #{tokens.$font-size-6xl});
   font-weight: var(--font-weight-extrabold);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  line-height: 1.05;
+  letter-spacing: -0.022em;
 }
 
 // H1
 h1, .h1 {
   font-size: clamp(#{tokens.$font-size-3xl}, 4vw, #{tokens.$font-size-4xl});
   font-weight: var(--font-weight-bold);
+  line-height: 1.1;
+  letter-spacing: -0.018em;
 }
 
 // H2
 h2, .h2 {
   font-size: clamp(#{tokens.$font-size-2xl}, 3vw, #{tokens.$font-size-3xl});
   font-weight: var(--font-weight-semibold);
+  line-height: 1.15;
+  letter-spacing: -0.014em;
 }
 
 // H3
 h3, .h3 {
   font-size: clamp(#{tokens.$font-size-xl}, 2vw, #{tokens.$font-size-2xl});
   font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+  letter-spacing: -0.008em;
 }
 
 // H4
@@ -200,7 +211,8 @@ p, .body {
   font-size: clamp(#{tokens.$font-size-5xl}, 10vw, #{tokens.$font-size-7xl});
   font-weight: var(--font-weight-light);
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.028em; // tighter still on very-large numerals
+  font-variant-numeric: tabular-nums;
 }
 
 // Time display (for arrivals)

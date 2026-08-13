@@ -66,6 +66,9 @@
   --transition-fast: #{tokens.$transition-fast};
   --transition-base: #{tokens.$transition-base};
   --transition-slow: #{tokens.$transition-slow};
+  --ease-standard: #{tokens.$ease-standard};
+  --ease-decelerate: #{tokens.$ease-decelerate};
+  --ease-accelerate: #{tokens.$ease-accelerate};
 
   // Typography
   --font-family-heading: #{tokens.$font-family-heading};
