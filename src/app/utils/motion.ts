@@ -19,29 +19,24 @@ export function pressPop(el: Element): void {
 
 /**
  * Card mount spring — translate up + fade in with a critically-damped spring.
- * Reduced motion → instant final state.
+ * Uses explicit keyframe arrays so Motion One doesn't have to parse the current
+ * CSS transform to figure out the from-state. Reduced motion → no-op.
  */
 export function springIn(el: Element, delayMs = 0): void {
   if (!el) return;
-  const target = el as HTMLElement;
-
-  if (prefersReducedMotion()) {
-    target.style.opacity = '1';
-    target.style.transform = 'none';
-    return;
-  }
-
-  // Seed the initial state so Motion animates *from* here to the target.
-  target.style.opacity = '0';
-  target.style.transform = 'translateY(12px) scale(0.98)';
+  if (prefersReducedMotion()) return; // CSS default is already fully visible
 
   animate(
-    target,
-    { opacity: 1, y: 0, scaleX: 1, scaleY: 1 },
+    el as HTMLElement,
     {
-      type: 'spring',
-      bounce: 0.15,
+      opacity: [0, 1],
+      y: [12, 0],
+      scaleX: [0.98, 1],
+      scaleY: [0.98, 1]
+    },
+    {
       duration: 0.4,
+      ease: [0.32, 0.72, 0, 1],
       delay: delayMs / 1000
     }
   );

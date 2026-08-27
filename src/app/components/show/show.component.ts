@@ -5,7 +5,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ShowsDataService } from '../../services/shows-data.service';
@@ -15,7 +14,7 @@ import { pressPop, springIn } from '../../utils/motion';
 @Component({
   selector: 'app-show',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule, MatChipsModule, MatButtonToggleModule, MatSlideToggleModule],
+  imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule, MatChipsModule, MatButtonToggleModule],
   template: `
     <div class="page-shell">
       <div class="page-container">
@@ -80,13 +79,6 @@ import { pressPop, springIn } from '../../utils/motion';
                 <span>ショー別</span>
               </mat-button-toggle>
             </mat-button-toggle-group>
-
-            <mat-slide-toggle *ngIf="viewMode === 'byTime'"
-                              class="overlap-toggle"
-                              [checked]="overlapCheckEnabled"
-                              (change)="toggleOverlapCheck($event.checked)">
-              時間被り確認
-            </mat-slide-toggle>
           </div>
 
           <!-- Show Name Filters (Multiple Selection) -->
@@ -147,71 +139,45 @@ import { pressPop, springIn } from '../../utils/motion';
             </span>
           </div>
 
-          <!-- BY TIME (default) -->
-          <div class="shows-grid" *ngIf="viewMode === 'byTime'">
-            <article #cardRef
-                     *ngFor="let show of filteredShows; let idx = index"
-                     class="show-card"
-                     [ngClass]="show.type"
-                     [style.border-left-color]="showColors[show.title]"
-                     [style.background]="'linear-gradient(135deg, ' + showColors[show.title] + '15, ' + showColors[show.title] + '08)'">
-
-              <!-- Badges row -->
-              <div class="show-card-top">
-                <div class="badge-group">
-                  <span class="pill pill-main" *ngIf="show.section">
-                    {{ show.section }}
-                  </span>
-                </div>
-
-                <div *ngIf="getCountdown(show)" class="countdown-pill">
-                  <mat-icon>schedule</mat-icon>
-                  <span>{{ getCountdown(show) }}</span>
-                </div>
+          <!-- BY TIME (planner style) -->
+          <div class="planner" *ngIf="viewMode === 'byTime'">
+            <!-- Hour rail -->
+            <div class="planner-rail">
+              <div *ngFor="let h of plannerHourLabels" class="planner-hour" [style.top.px]="h.top">
+                <span class="planner-hour-label">{{ h.label }}</span>
+                <div class="planner-hour-line"></div>
               </div>
+            </div>
 
-              <!-- Title & description -->
-              <h3 class="show-title">
-                {{ show.title }}
-              </h3>
-
-              <p class="show-description" *ngIf="show.description">
-                {{ show.description }}
-              </p>
-
-              <!-- Meta row -->
-              <div class="show-meta-row">
-                <div class="meta-item primary-time">
-                  <mat-icon>schedule</mat-icon>
-                  <div class="meta-text">
-                    <span class="meta-label">開演時刻</span>
-                    <span class="meta-value">{{ show.time }}</span>
+            <!-- Scrollable events strip -->
+            <div class="planner-events-scroll">
+              <div class="planner-events"
+                   [style.height.px]="plannerHeightPx"
+                   [style.min-width]="plannerMinWidthPct + '%'">
+                <article #cardRef
+                         *ngFor="let ev of plannerEvents"
+                         class="show-card planner-event"
+                         [class.is-short]="ev.short"
+                         [ngClass]="ev.show.type"
+                         [style.top.px]="ev.top"
+                         [style.height.px]="ev.height"
+                         [style.left]="ev.left"
+                         [style.width]="ev.width"
+                         [style.border-left-color]="showColors[ev.show.title]"
+                         [style.background]="'linear-gradient(135deg, ' + showColors[ev.show.title] + '15, ' + showColors[ev.show.title] + '08)'">
+                  <div class="planner-event-head">
+                    <span class="planner-event-time">{{ ev.show.time }}</span>
+                    @if (showDurations[ev.show.title]) {
+                      <span class="planner-event-duration">{{ showDurations[ev.show.title] }}分</span>
+                    }
                   </div>
-                </div>
-                <div class="meta-item" *ngIf="showDurations[show.title]">
-                  <mat-icon>timelapse</mat-icon>
-                  <div class="meta-text">
-                    <span class="meta-label">上演時間</span>
-                    <span class="meta-value">{{ showDurations[show.title] }}分</span>
-                  </div>
-                </div>
+                  <div class="planner-event-title">{{ ev.show.title }}</div>
+                  @if (showEmojis[ev.show.title]) {
+                    <span class="show-emoji" aria-hidden="true">{{ showEmojis[ev.show.title] }}</span>
+                  }
+                </article>
               </div>
-
-              <div class="overlap-warning" *ngIf="overlapWarnings[show.id]?.length">
-                <mat-icon>warning_amber</mat-icon>
-                <div class="overlap-warning-body">
-                  <span class="overlap-warning-title">時間被りの可能性</span>
-                  <span class="overlap-warning-list">
-                    {{ overlapWarnings[show.id].join(' / ') }}
-                  </span>
-                </div>
-              </div>
-
-              @if (showEmojis[show.title]) {
-                <span class="show-emoji" aria-hidden="true">{{ showEmojis[show.title] }}</span>
-              }
-
-            </article>
+            </div>
           </div>
 
           <!-- BY SHOW (grouped) -->
@@ -587,13 +553,6 @@ import { pressPop, springIn } from '../../utils/motion';
       margin-bottom: var(--space-1);
     }
 
-    .overlap-toggle {
-      font-family: var(--font-family-heading);
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #1f2933;
-    }
-
     .view-mode-toggle mat-button-toggle-group {
       border-radius: 999px;
       overflow: hidden;
@@ -617,14 +576,14 @@ import { pressPop, springIn } from '../../utils/motion';
     /* GROUPED VIEW */
 
     .times-count {
-      padding: 2px 10px;
+      padding: 1px 8px;
       border-radius: 999px;
       background: #eef2ff;
       color: #3730a3;
       border: 1px solid #c7d2fe;
-      font-size: 0.7rem;
+      font-size: 0.62rem;
       font-weight: 600;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
       white-space: nowrap;
     }
@@ -632,26 +591,26 @@ import { pressPop, springIn } from '../../utils/motion';
     .times-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 4px;
       margin-top: auto;
-      padding-top: var(--space-2);
-      padding-right: 40px;
+      padding-top: 6px;
+      padding-right: 30px;
     }
 
     .time-chip {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 56px;
-      padding: 6px 10px;
+      min-width: 46px;
+      padding: 3px 8px;
       border-radius: 999px;
       background: #eff6ff;
       border: 1px solid #bfdbfe;
       color: #1e3a8a;
       font-family: var(--font-family-heading);
-      font-size: 0.85rem;
+      font-size: 0.72rem;
       font-weight: 600;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.01em;
     }
 
     /* SKELETON LOADING */
@@ -781,7 +740,7 @@ import { pressPop, springIn } from '../../utils/motion';
     .shows-grid {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
-      gap: var(--space-2);
+      gap: 8px;
     }
 
     @media (min-width: 720px) {
@@ -796,22 +755,22 @@ import { pressPop, springIn } from '../../utils/motion';
       position: relative;
       display: flex;
       flex-direction: column;
-      padding: var(--space-3);
-      border-radius: 20px;
-      min-height: 140px;
+      padding: var(--space-2);
+      border-radius: 14px;
+      min-height: 96px;
       box-shadow:
-        0 12px 30px rgba(148, 163, 184, 0.35),
+        0 6px 18px rgba(148, 163, 184, 0.28),
         0 0 0 1px rgba(229, 231, 235, 0.9);
       overflow: hidden;
       isolation: isolate;
       color: #111827;
       background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), #f9fafb);
-      // Mount state — springIn() in motion.ts animates to opacity 1 / translateY 0
-      opacity: 0;
-      transform: translateY(12px) scale(0.98);
+      // Visible by default; springIn() (if present) reseeds the mount state at runtime.
+      // Not relying on CSS-hidden state means Motion One failures never leave cards invisible.
+      opacity: 1;
       transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-      border-left: 6px solid;
-      will-change: transform, opacity;
+      border-left: 4px solid;
+      will-change: transform;
     }
 
     .show-card::before {
@@ -849,21 +808,21 @@ import { pressPop, springIn } from '../../utils/motion';
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: var(--space-2);
-      margin-bottom: var(--space-2);
+      gap: var(--space-1);
+      margin-bottom: 6px;
     }
 
     .badge-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 4px;
     }
 
     .pill {
       border-radius: 999px;
-      padding: 2px 9px;
-      font-size: 0.7rem;
-      letter-spacing: 0.04em;
+      padding: 1px 7px;
+      font-size: 0.62rem;
+      letter-spacing: 0.03em;
       text-transform: uppercase;
       white-space: nowrap;
       border: 1px solid transparent;
@@ -917,22 +876,26 @@ import { pressPop, springIn } from '../../utils/motion';
     /* Title and description */
 
     .show-title {
-      margin: 0 0 6px;
+      margin: 0 0 4px;
       font-family: var(--font-family-heading);
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-weight: 650;
-      letter-spacing: 0.01em;
-      line-height: 1.3;
+      letter-spacing: 0.005em;
+      line-height: 1.25;
       color: #111827;
     }
 
     .show-description {
-      margin: 0 0 var(--space-2);
-      font-size: 0.8rem;
+      margin: 0 0 6px;
+      font-size: 0.72rem;
       color: #4b5563;
-      max-height: 3.6em;
+      max-height: 2.6em;
+      line-height: 1.35;
       overflow: hidden;
       text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
 
     /* Meta row */
@@ -941,14 +904,14 @@ import { pressPop, springIn } from '../../utils/motion';
       margin-top: auto;
       display: flex;
       flex-wrap: wrap;
-      gap: var(--space-2);
+      gap: 6px;
     }
 
     .meta-item {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 7px 10px;
+      gap: 6px;
+      padding: 4px 8px;
       border-radius: 999px;
       background: #f9fafb;
       border: 1px solid #e5e7eb;
@@ -960,9 +923,9 @@ import { pressPop, springIn } from '../../utils/motion';
     }
 
     .meta-item mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
       color: #1f2933;
     }
 
@@ -972,76 +935,172 @@ import { pressPop, springIn } from '../../utils/motion';
     }
 
     .meta-label {
-      font-size: 0.65rem;
+      font-size: 0.58rem;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       opacity: 0.8;
       color: #6b7280;
     }
 
     .meta-value {
-      font-size: 0.82rem;
+      font-size: 0.74rem;
       font-weight: 600;
       color: #111827;
     }
 
-    /* OVERLAP WARNING */
+    /* PLANNER VIEW (時刻順) */
 
-    .overlap-warning {
-      margin-top: var(--space-2);
+    .planner {
+      position: relative;
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 6px;
+      margin-top: var(--space-1);
+    }
+
+    .planner-rail {
+      position: relative;
+    }
+
+    .planner-hour {
+      position: absolute;
+      left: 0;
+      right: 0;
       display: flex;
       align-items: flex-start;
-      gap: 8px;
-      padding: 8px 10px;
-      background: linear-gradient(135deg, #fff7ed, #ffedd5);
-      border: 1px solid #fdba74;
-      border-radius: 12px;
-      color: #7c2d12;
-      padding-right: 44px;
+      gap: 4px;
+      transform: translateY(-0.55em);
+      pointer-events: none;
     }
 
-    .overlap-warning mat-icon {
-      color: #c2410c;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-
-    .overlap-warning-body {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .overlap-warning-title {
+    .planner-hour-label {
       font-family: var(--font-family-heading);
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: #9a3412;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #6b7280;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
     }
 
-    .overlap-warning-list {
+    .planner-hour-line {
+      position: absolute;
+      top: 0.55em;
+      left: 44px;   /* aligned with the events column */
+      right: -6px;
+      height: 1px;
+      background: repeating-linear-gradient(to right, rgba(148,163,184,0.35) 0 6px, transparent 6px 12px);
+    }
+
+    .planner-events-scroll {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .planner-events {
+      position: relative;
+      /* height + min-width set inline by the component */
+    }
+
+    .planner-event {
+      position: absolute;
+      padding: 6px 8px;
+      min-height: 0;                 /* override default show-card min-height */
+      box-shadow: 0 4px 12px rgba(148, 163, 184, 0.28), 0 0 0 1px rgba(229, 231, 235, 0.9);
+      border-left-width: 4px;
+    }
+
+    .planner-event-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-family-heading);
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 2px;
+    }
+
+    .planner-event-time {
+      color: #111827;
+      font-weight: 700;
+    }
+
+    .planner-event-duration {
+      color: #6b7280;
+      letter-spacing: 0.02em;
+    }
+
+    .planner-event-title {
+      font-family: var(--font-family-heading);
       font-size: 0.78rem;
-      color: #7c2d12;
-      line-height: 1.4;
-      word-break: break-word;
+      font-weight: 600;
+      color: #111827;
+      line-height: 1.25;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      padding-right: 22px;   /* leave room for the corner emoji */
+    }
+
+    /* Slim the corner emoji on planner boxes so short shows still fit */
+    .planner-event .show-emoji {
+      font-size: 1.1rem;
+      bottom: 4px;
+      right: 6px;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+    }
+
+    /* Short events (≤ 15 min): the duration slot is too narrow for the title,
+       so let the title "bulge" out below the actual box as a floating callout. */
+    .planner-event.is-short {
+      overflow: visible;   /* allow the title bulge to escape the box height */
+      padding-bottom: 4px;
+      z-index: 2;
+    }
+
+    .planner-event.is-short .planner-event-title {
+      position: absolute;
+      left: -2px;
+      top: 100%;
+      max-width: calc(100% + 4px);
+      margin-top: 3px;
+      padding: 3px 8px 3px 10px;
+      background: #fff;
+      border-left: 3px solid;
+      border-left-color: inherit;
+      border-radius: 0 8px 8px 4px;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(229, 231, 235, 0.85);
+      font-size: 0.72rem;
+      line-height: 1.2;
+      -webkit-line-clamp: 2;
+      padding-right: 22px;
+      z-index: 3;
+    }
+
+    /* Move the emoji into the bulge so it stays visually attached to the title */
+    .planner-event.is-short .show-emoji {
+      top: 100%;
+      bottom: auto;
+      right: 4px;
+      margin-top: 6px;
+      font-size: 0.95rem;
     }
 
     /* SHOW EMOJI INDICATOR */
 
     .show-emoji {
       position: absolute;
-      bottom: var(--space-2);
-      right: var(--space-2);
-      font-size: 1.8rem;
+      bottom: 6px;
+      right: 8px;
+      font-size: 1.35rem;
       line-height: 1;
       pointer-events: none;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.15));
       z-index: 1;
     }
 
@@ -1141,7 +1200,7 @@ import { pressPop, springIn } from '../../utils/motion';
 
     .refresh-shell {
       position: sticky;
-      bottom: calc(80px + var(--space-2));
+      bottom: calc(64px + var(--space-2));
       margin-top: var(--space-4);
       display: flex;
       justify-content: flex-end;
@@ -1191,6 +1250,64 @@ import { pressPop, springIn } from '../../utils/motion';
       to { transform: rotate(360deg); }
     }
 
+    /* MOBILE COMPACT (≤ 640px) */
+    @media (max-width: 640px) {
+      .page-shell { padding: 6px; }
+      .page-container {
+        padding: 10px;
+        padding-bottom: 96px;
+        border-radius: 14px;
+      }
+
+      // Header
+      .shows-header { margin-bottom: var(--space-2); gap: 6px; }
+      .title { font-size: 1.15rem; margin-bottom: 2px; }
+      .subtitle { font-size: 0.72rem; }
+      .header-meta { padding: 3px 8px; font-size: 0.65rem; }
+      .header-meta mat-icon { font-size: 12px; width: 12px; height: 12px; }
+
+      // Nav buttons (ショースケジュール / 休止施設 shortcuts)
+      .nav-buttons { gap: 6px; margin-bottom: var(--space-2); }
+      .nav-btn { min-width: 0; height: 36px; font-size: 0.78rem; gap: 4px; }
+      .nav-btn mat-icon { font-size: 16px; width: 16px; height: 16px; }
+
+      // Controls area
+      .controls-shell { gap: 6px; margin-bottom: var(--space-2); }
+      .date-chip { min-width: 58px; padding: 5px 7px; gap: 1px; }
+      .date-chip .day-name { font-size: 0.6rem; }
+      .date-chip .day-number { font-size: 0.9rem; }
+
+      // View-mode toggle
+      .view-mode-toggle { justify-content: center; }
+      .view-mode-toggle mat-button-toggle { font-size: 0.72rem; --mat-standard-button-toggle-height: 32px; }
+      .view-mode-toggle mat-icon { font-size: 14px; width: 14px; height: 14px; }
+
+      // Day header
+      .day-header { padding: 4px 2px; }
+      .day-header-label { font-size: 0.6rem; letter-spacing: 0.14em; }
+      .day-header-title { font-size: 0.95rem; }
+      .day-header-count { font-size: 0.62rem; padding: 3px 8px; }
+
+      // Planner rail — tighter left column
+      .planner { grid-template-columns: 38px 1fr; gap: 4px; }
+      .planner-hour-label { font-size: 0.6rem; }
+      .planner-hour-line { left: 38px; }
+
+      // Closures
+      .closures-section { padding: var(--space-2); margin-top: var(--space-3); }
+      .closures-header { gap: 6px; margin-bottom: var(--space-2); }
+      .closures-header mat-icon { font-size: 22px; width: 22px; height: 22px; }
+      .closures-header h2 { font-size: 1rem; }
+      .closures-date { font-size: 0.72rem; }
+      .closure-card { padding: 6px 8px; border-radius: 10px; }
+      .closure-icon { font-size: 16px; width: 16px; height: 16px; }
+      .closure-text { font-size: 0.78rem; }
+
+      // Refresh
+      .refresh-btn { height: 40px; font-size: 0.78rem; padding-inline: var(--space-2); }
+      .refresh-btn mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    }
+
   `]
 })
 export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
@@ -1213,16 +1330,30 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
   showColors: { [showName: string]: string } = {}; // New: color mapping for each show
   showEmojis: { [showName: string]: string } = {};
   showDurations: { [showName: string]: number } = {};
-  overlapCheckEnabled = true;
-  overlapWarnings: { [showId: string]: string[] } = {};
 
-  /** Titles excluded from overlap checking */
-  private readonly OVERLAP_EXCLUDED_TITLES = new Set<string>([
-    '「モーメンタス」ナイトタイム・スペクタキュラー'
-  ]);
+  /** Planner (時刻順) time-axis config */
+  private readonly PLANNER_START_MIN = 8 * 60;   // 08:00
+  private readonly PLANNER_END_MIN = 23 * 60 + 30; // 23:30
+  private readonly PX_PER_MIN = 2.5;
+  private readonly DEFAULT_DURATION_MIN = 15;
 
-  /** Buffer minutes added to duration when checking overlaps */
-  private readonly OVERLAP_BUFFER_MIN = 15;
+  /** Duration threshold (min) below which a planner event gets the "bulge" style */
+  private readonly SHORT_EVENT_MAX_MIN = 15;
+  /** Boundaries beyond which empty hours are collapsed */
+  private readonly CORE_START_MIN = 10 * 60;   // 10:00 — always visible
+  private readonly CORE_END_MIN   = 22 * 60;   // 22:00 — always visible
+
+  plannerHourLabels: { label: string; top: number }[] = [];
+  plannerHeightPx = 0;
+  plannerMinWidthPct = 100;
+  plannerEvents: {
+    show: Show;
+    top: number;
+    height: number;
+    left: string;
+    width: string;
+    short: boolean;
+  }[] = [];
   loading = false;
   error: string | null = null;
   lastUpdated: Date | null = null;
@@ -1256,7 +1387,7 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
         next: (data) => {
           this.showEmojis = data.emojis;
           this.showDurations = data.durations;
-          this.recomputeOverlapWarnings();
+          this.buildPlanner();
         },
         error: (error) => { console.error('Error loading show emojis:', error); }
       });
@@ -1450,11 +1581,6 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
     this.viewMode = mode;
   }
 
-  toggleOverlapCheck(checked: boolean): void {
-    this.overlapCheckEnabled = checked;
-    this.recomputeOverlapWarnings();
-  }
-
   onChipTap(event: Event): void {
     const el = event.currentTarget as Element | null;
     if (el) pressPop(el);
@@ -1466,36 +1592,112 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
     return h * 60 + m;
   }
 
-  private recomputeOverlapWarnings(): void {
-    this.overlapWarnings = {};
-    if (!this.overlapCheckEnabled) return;
-
-    // Only consider shows that have a duration AND are not in the excluded set.
-    const windows = this.filteredShows
-      .filter(s => !this.OVERLAP_EXCLUDED_TITLES.has(s.title))
-      .map(s => {
-        const dur = this.showDurations[s.title];
-        if (!dur) return null;
-        const start = this.timeToMinutes(s.time);
+  /**
+   * Build the planner (時刻順) view model from `filteredShows`:
+   * - Vertical placement by start time, height by actual duration (or 15 min default)
+   * - Cluster-based overlap layout: any group of shows whose time windows chain
+   *   together gets a 80%-wide column each, offset by 80% left → total width grows
+   *   past 100% so the row can be scrolled right to see later boxes.
+   */
+  private buildPlanner(): void {
+    // Sort by start time; compute each show's [start, end) window in minutes.
+    const items = this.filteredShows
+      .map(show => {
+        const start = this.timeToMinutes(show.time);
         if (start < 0) return null;
-        return { show: s, start, end: start + dur + this.OVERLAP_BUFFER_MIN };
+        const dur = this.showDurations[show.title] || this.DEFAULT_DURATION_MIN;
+        return { show, start, end: start + dur, dur };
       })
-      .filter((w): w is { show: Show; start: number; end: number } => w !== null);
+      .filter((x): x is { show: Show; start: number; end: number; dur: number } => x !== null)
+      .sort((a, b) => a.start - b.start);
 
-    for (let i = 0; i < windows.length; i++) {
-      const a = windows[i];
-      for (let j = 0; j < windows.length; j++) {
-        if (i === j) continue;
-        const b = windows[j];
-        // Same show at another time isn't a "conflict" for the user
-        if (a.show.title === b.show.title) continue;
-        // Half-open overlap: [a.start, a.end) intersects [b.start, b.end)
-        if (a.start < b.end && b.start < a.end) {
-          if (!this.overlapWarnings[a.show.id]) this.overlapWarnings[a.show.id] = [];
-          this.overlapWarnings[a.show.id].push(`${b.show.title} ${b.show.time}`);
-        }
+    // Compute the visible time range.
+    // Rule: 10:00–22:00 is always shown. 08:00–10:00 and 22:00–23:30 collapse
+    // when no show falls into them. Expand backward/forward hour-by-hour to
+    // fully cover any early/late shows.
+    let visibleStart = this.CORE_START_MIN;
+    let visibleEnd = this.CORE_END_MIN;
+    for (const it of items) {
+      if (it.start < visibleStart) {
+        // snap down to the previous whole hour so the earliest label is a round hour
+        visibleStart = Math.max(this.PLANNER_START_MIN, Math.floor(it.start / 60) * 60);
+      }
+      if (it.end > visibleEnd) {
+        // snap up: allow 23:30 as the terminal marker beyond 23:00
+        const snapped = Math.min(this.PLANNER_END_MIN, Math.ceil(it.end / 30) * 30);
+        visibleEnd = Math.max(visibleEnd, snapped);
       }
     }
+
+    // Hour labels within visible range. Include whole hours; add 23:30 tail
+    // marker only if the visible range actually extends past 23:00.
+    const labels: { label: string; top: number }[] = [];
+    const firstHour = Math.ceil(visibleStart / 60);
+    const lastHour = Math.floor(visibleEnd / 60);
+    for (let h = firstHour; h <= lastHour; h++) {
+      const min = h * 60;
+      labels.push({
+        label: `${String(h).padStart(2, '0')}:00`,
+        top: (min - visibleStart) * this.PX_PER_MIN
+      });
+    }
+    if (visibleEnd > 23 * 60) {
+      labels.push({
+        label: '23:30',
+        top: (this.PLANNER_END_MIN - visibleStart) * this.PX_PER_MIN
+      });
+    }
+    this.plannerHourLabels = labels;
+    this.plannerHeightPx = (visibleEnd - visibleStart) * this.PX_PER_MIN;
+
+    // Group into overlap clusters (chained overlap).
+    const clusters: (typeof items)[] = [];
+    let cur: typeof items = [];
+    let curMaxEnd = -Infinity;
+    for (const it of items) {
+      if (it.start < curMaxEnd) {
+        cur.push(it);
+        curMaxEnd = Math.max(curMaxEnd, it.end);
+      } else {
+        if (cur.length) clusters.push(cur);
+        cur = [it];
+        curMaxEnd = it.end;
+      }
+    }
+    if (cur.length) clusters.push(cur);
+
+    // Place events. Non-overlapping cluster (1 item) uses full width.
+    // Overlapping cluster: each column is 80% wide, offset by (index * 80%) left.
+    // Short events (≤ SHORT_EVENT_MAX_MIN) are flagged for the "bulge" style
+    // so the title has somewhere to render below the actual duration slot.
+    const events: typeof this.plannerEvents = [];
+    let maxRightPct = 100;
+    for (const cluster of clusters) {
+      const buildEvent = (
+        it: typeof items[number],
+        left: string,
+        width: string
+      ) => ({
+        show: it.show,
+        top: (it.start - visibleStart) * this.PX_PER_MIN,
+        height: Math.max(it.dur * this.PX_PER_MIN, 22),
+        left,
+        width,
+        short: it.dur <= this.SHORT_EVENT_MAX_MIN
+      });
+
+      if (cluster.length === 1) {
+        events.push(buildEvent(cluster[0], '0%', '100%'));
+      } else {
+        cluster.forEach((it, idx) => {
+          const leftPct = idx * 80;
+          events.push(buildEvent(it, `${leftPct}%`, '80%'));
+          maxRightPct = Math.max(maxRightPct, leftPct + 80);
+        });
+      }
+    }
+    this.plannerEvents = events;
+    this.plannerMinWidthPct = maxRightPct;
   }
 
   private filterShowsByDateAndType(): void {
@@ -1532,7 +1734,7 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
       times: g.times.slice().sort((a, b) => a.localeCompare(b))
     }));
 
-    this.recomputeOverlapWarnings();
+    this.buildPlanner();
   }
 
   private formatDateKey(date: Date): string {

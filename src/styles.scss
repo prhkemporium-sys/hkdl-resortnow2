@@ -110,9 +110,113 @@ body {
   line-height: var(--line-height-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: light dark;
+}
 
-  // Force light mode always
-  color-scheme: light;
+// ============================================
+// DARK MODE — overrides for hardcoded-white surfaces
+// (CSS custom properties in _css-variables.scss handle var(--color-*) automatically;
+//  this block targets components that hardcode #fff / rgba(255,255,255,*) values.)
+// ============================================
+
+[data-theme='dark'] {
+  // App shell content background
+  .content { background: var(--color-background) !important; }
+
+  // Bottom-nav — dark translucent
+  .bottom-nav {
+    background: rgba(28, 28, 32, 0.72) !important;
+    border-top-color: rgba(255, 255, 255, 0.06) !important;
+    .nav-item { color: #a1a1aa; }
+    .nav-item.active {
+      color: var(--color-primary);
+      background: color-mix(in oklab, var(--color-primary) 22%, transparent);
+    }
+  }
+
+  // Show page shell
+  app-show {
+    :host { color: #e5e7eb; }
+    .page-container {
+      background: radial-gradient(circle at 8% 0, rgba(60, 60, 70, 0.6), transparent 55%),
+                  rgba(24, 24, 28, 0.95) !important;
+      color: #e5e7eb;
+    }
+  }
+
+  // Show-page inner elements that hardcode light colours
+  .show-card {
+    background: radial-gradient(circle at top left, rgba(60, 60, 70, 0.9), #1e1e24) !important;
+    color: #e5e7eb;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+  }
+  .show-title, .planner-event-title, .planner-event-time, .day-header-title { color: #f3f4f6 !important; }
+  .show-description, .meta-value { color: #d1d5db !important; }
+  .meta-label, .day-header-label, .planner-event-duration { color: #9ca3af !important; }
+  .meta-item { background: rgba(255, 255, 255, 0.05) !important; border-color: rgba(255, 255, 255, 0.08) !important; }
+  .primary-time { background: rgba(59, 130, 246, 0.15) !important; border-color: rgba(59, 130, 246, 0.35) !important; }
+  .pill-main { background: rgba(250, 204, 21, 0.15) !important; border-color: rgba(250, 204, 21, 0.35) !important; color: #fde68a !important; }
+  .pill-subtle { background: rgba(255, 255, 255, 0.05) !important; border-color: rgba(255, 255, 255, 0.08) !important; color: #d1d5db !important; }
+  .planner-events-scroll { background: rgba(255, 255, 255, 0.03) !important; }
+  .planner-event.is-short .planner-event-title {
+    background: #24242c !important;
+    color: #f3f4f6 !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+  }
+  .planner-hour-label { color: #9ca3af !important; }
+  .planner-hour-line { background: repeating-linear-gradient(to right, rgba(255,255,255,0.15) 0 6px, transparent 6px 12px) !important; }
+  .time-chip { background: rgba(59, 130, 246, 0.15) !important; border-color: rgba(59, 130, 246, 0.35) !important; color: #bfdbfe !important; }
+  .times-count { background: rgba(99, 102, 241, 0.15) !important; border-color: rgba(99, 102, 241, 0.35) !important; color: #c7d2fe !important; }
+  .date-chip {
+    background: linear-gradient(135deg, #23232b, #2b2b34) !important;
+    color: #e5e7eb !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  // Weather page (info panels + forecast)
+  .info-panel {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #e5e7eb;
+  }
+  .info-panel-header h3 { color: #f3f4f6 !important; }
+  .event-item {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.14), rgba(236, 72, 153, 0.08)) !important;
+    border-color: rgba(236, 72, 153, 0.35) !important;
+  }
+  .event-name { color: #fbcfe8 !important; }
+  .event-date { color: #f9a8d4 !important; }
+  .forecast-card {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #e5e7eb;
+  }
+  .f-day { color: #9ca3af !important; }
+  .f-temp .max { color: #f3f4f6 !important; }
+  .f-temp .min { color: #9ca3af !important; }
+
+  // Transport page cards
+  .info-card {
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: #e5e7eb;
+  }
+  .list-item, .multi-bus-row {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #e5e7eb;
+  }
+  .destination { color: #e5e7eb !important; }
+  .destination .dest-icon { color: #9ca3af !important; }
+  .last-updated { color: #d1d5db; }
+
+  // Notice boxes — retain amber palette but slightly muted for dark bg
+  .notice-box {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08)) !important;
+    border-color: rgba(245, 158, 11, 0.5) !important;
+    .notice-text { color: #fbbf24 !important; }
+    .notice-icon { color: #fbbf24 !important; }
+  }
+
+  // Header stays translucent-purple; just keep icons crisp
+  .header { box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4); }
 }
 
 // ============================================

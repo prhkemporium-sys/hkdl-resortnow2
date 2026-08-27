@@ -787,6 +787,62 @@ export class DataService {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.6; }
     }
+
+    // === MOBILE COMPACT (≤ 640px) ===
+    @media (max-width: 640px) {
+      .page-container { padding: var(--space-1); padding-bottom: 72px; }
+
+      // Notice
+      .notice-box { padding: 8px 10px; gap: 6px; margin-bottom: var(--space-2); }
+      .notice-icon { font-size: 18px; width: 18px; height: 18px; }
+      .notice-text { font-size: 0.78rem; line-height: 1.35; }
+
+      // Last-updated pill
+      .last-updated { padding: 4px 8px; font-size: 0.7rem; margin-bottom: var(--space-2); }
+      .last-updated mat-icon { font-size: 14px; width: 14px; height: 14px; }
+
+      // Cards
+      .info-card {
+        margin-bottom: var(--space-2);
+        border-radius: 14px;
+      }
+      .info-card .mat-mdc-card-header,
+      .info-card .mat-mdc-card-content { padding: 10px 12px; }
+      .info-card .mat-mdc-card-title { font-size: 0.95rem !important; }
+      .info-card .mat-mdc-card-subtitle { font-size: 0.72rem !important; }
+      .icon-circle { width: 36px !important; height: 36px !important; }
+      .icon-circle mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+      // Section headers
+      .section-header { font-size: 0.68rem; margin: var(--space-2) 0 var(--space-1); gap: 4px; }
+      .section-header .section-icon { font-size: 14px; width: 14px; height: 14px; }
+
+      // Divider
+      .divider { margin: var(--space-2) 0; }
+
+      // MTR/R8 list items
+      .list-item { padding: 6px 10px; border-left-width: 3px; }
+      .destination { font-size: 0.8rem; gap: 4px; }
+      .destination .dest-icon { font-size: 14px; width: 14px; height: 14px; }
+      .arrival-time { font-size: 1rem; }
+      .pulse-dot { width: 6px; height: 6px; }
+
+      // Multi-bus rows (Lantau Link hub)
+      .multi-bus-row { padding: 6px 8px; gap: 6px; }
+      .route-badge { font-size: 0.62rem; padding: 3px 6px; min-width: 38px; }
+      .route-dest { font-size: 0.72rem; }
+      .route-time { font-size: 0.85rem; }
+
+      // No-data / error
+      .no-data { padding: var(--space-1); font-size: 0.72rem; }
+      .error-card { padding: var(--space-2); }
+      .error-card mat-icon { font-size: 32px; width: 32px; height: 32px; }
+      .error-card h4 { font-size: 0.9rem; }
+      .error-card p { font-size: 0.78rem; }
+
+      // Refresh
+      .refresh-btn { height: 48px; font-size: 0.85rem; margin-top: var(--space-2); }
+    }
   `]
 })
 export class TransportComponent implements OnInit, OnDestroy {
@@ -1592,6 +1648,55 @@ export class TransportComponent implements OnInit, OnDestroy {
         transition: width var(--transition-base);
       }
     }
+
+    // === MOBILE COMPACT (≤ 640px) ===
+    @media (max-width: 640px) {
+      .page-container { padding: var(--space-1); padding-bottom: 72px; }
+
+      // Info panels
+      .info-panel { padding: var(--space-2); margin-bottom: var(--space-2); border-radius: 14px; }
+      .info-panel-header { margin-bottom: 6px; gap: 6px; }
+      .info-panel-header mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      .info-panel-header h3 { font-size: 0.95rem; }
+      .hours-line { padding: 4px 0; gap: var(--space-1); }
+      .hours-line .hours-value { font-size: 1.35rem; }
+      .hours-line .hours-sep { font-size: 1rem; }
+      .event-item { padding: 6px 10px; }
+      .event-item .event-name { font-size: 0.85rem; }
+      .event-item .event-date { font-size: 0.72rem; }
+      .info-empty { padding: 6px; font-size: 0.75rem; }
+
+      // Hero
+      .weather-hero {
+        min-height: 250px;
+        padding: var(--space-3);
+        border-radius: 18px;
+        margin-bottom: var(--space-2);
+      }
+      .hero-content { padding: var(--space-1); }
+      .location { font-size: 0.85rem; margin-bottom: 4px; }
+      .location mat-icon { font-size: 16px; width: 16px; height: 16px; }
+      .temp { font-size: clamp(2.6rem, 15vw, 3.6rem); margin: 4px 0; }
+      .weather-condition-icon { margin-bottom: var(--space-1); }
+      .weather-condition-icon .large-weather-icon { font-size: 54px; width: 54px; height: 54px; }
+      .weather-details-grid { gap: 6px; margin: var(--space-1) 0; }
+      .detail-card { padding: 6px; }
+      .detail-card mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      .detail-card .detail-label { font-size: 0.62rem; }
+      .detail-card .detail-value { font-size: 0.95rem; }
+
+      // Forecast
+      .forecast-heading { font-size: 1rem; margin: var(--space-3) 0 var(--space-1); gap: 6px; }
+      .forecast-heading mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      .forecast-grid { gap: 6px; grid-template-columns: repeat(2, 1fr); }
+      .forecast-card { padding: var(--space-1); border-radius: 12px; }
+      .f-day { font-size: 0.68rem; margin-bottom: 4px; }
+      .f-icon { margin: 4px 0; }
+      .f-icon .weather-icon { font-size: 26px; width: 26px; height: 26px; }
+      .f-temp { gap: 4px; margin: 4px 0; }
+      .f-temp .max { font-size: 0.95rem; }
+      .f-temp .min { font-size: 0.78rem; }
+    }
   `]
 })
 export class WeatherComponent implements OnInit, OnDestroy {
@@ -1741,11 +1846,17 @@ export class WeatherComponent implements OnInit, OnDestroy {
   imports: [CommonModule, MatToolbarModule, MatIconModule, TransportComponent, WeatherComponent, ShowComponent],
   template: `
     <mat-toolbar class="header">
-      <span>HKDL ResortNow by Emporium</span>
+      <div class="brand">
+        <span class="app-title">HKDL ResortNow</span>
+        <span class="app-author">by Emporium</span>
+      </div>
       <span class="spacer"></span>
-      <a href="https://lit.link/ja/hkemporium" target="_blank" rel="noopener noreferrer" class="return-link">
+      <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'ライトモード' : 'ダークモード'" title="{{ isDark ? 'Light mode' : 'Dark mode' }}">
+        <mat-icon>{{ isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+      <a href="https://lit.link/ja/hkemporium" target="_blank" rel="noopener noreferrer" class="return-link" aria-label="lit.linkに戻る">
         <mat-icon>arrow_back</mat-icon>
-        <span>lit.linkに戻る</span>
+        <span class="return-label">lit.linkに戻る</span>
       </a>
     </mat-toolbar>
 
@@ -1777,27 +1888,74 @@ export class WeatherComponent implements OnInit, OnDestroy {
     :host { display: flex; flex-direction: column; height: 100vh; }
     .header {
       position: sticky; top: 0; z-index: 100;
-      display: flex; align-items: center;
+      display: flex; align-items: center; gap: 8px;
+      padding: 0 12px;
+      min-height: 52px;
       background: color-mix(in oklab, var(--color-primary) 55%, transparent);
       backdrop-filter: blur(20px) saturate(180%);
       -webkit-backdrop-filter: blur(20px) saturate(180%);
       border-bottom: 1px solid rgba(255, 255, 255, 0.18);
       box-shadow: 0 6px 24px rgba(105, 14, 127, 0.18);
       color: #fff;
-      font-weight: 600;
+    }
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 0;
+    }
+    .app-title {
+      font-family: var(--font-family-heading);
+      font-size: 15px;
+      font-weight: 700;
       letter-spacing: 0.005em;
+      white-space: nowrap;
+    }
+    .app-author {
+      font-size: 10px;
+      font-weight: 400;
+      opacity: 0.85;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
     }
     .spacer { flex: 1; }
+    .theme-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+      border-radius: 999px;
+      cursor: pointer;
+      padding: 0;
+      transition: transform var(--transition-fast), background-color var(--transition-fast);
+      &:hover { background: rgba(255, 255, 255, 0.24); }
+      &:active { transform: scale(0.94); }
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    }
     .return-link {
-      display: flex; align-items: center; gap: 6px;
-      color: #1f2937; text-decoration: none; font-size: 14px; font-weight: 600;
-      padding: 6px 12px; border-radius: 999px;
+      display: inline-flex; align-items: center; gap: 4px;
+      color: #1f2937; text-decoration: none; font-size: 12px; font-weight: 600;
+      padding: 5px 10px; border-radius: 999px;
       transition: transform var(--transition-fast), background-color var(--transition-fast);
       background-color: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(10px);
+      white-space: nowrap;
       &:hover { background-color: #ffffff; color: #000; }
       &:active { transform: scale(0.96); }
-      mat-icon { font-size: 20px; width: 20px; height: 20px; }
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    }
+    @media (max-width: 480px) {
+      .header { padding: 0 10px; min-height: 48px; gap: 6px; }
+      .app-title { font-size: 13px; }
+      .app-author { font-size: 9px; }
+      .return-label { display: none; }
+      .return-link {
+        width: 34px; height: 34px; padding: 0;
+        justify-content: center;
+      }
+      .return-link mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      .theme-toggle { width: 32px; height: 32px; }
     }
     .content {
       flex: 1;
@@ -1808,22 +1966,22 @@ export class WeatherComponent implements OnInit, OnDestroy {
       -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent);
     }
     .bottom-nav {
-      position: fixed; bottom: 0; width: 100%; height: 80px;
+      position: fixed; bottom: 0; width: 100%; height: 64px;
       background: rgba(255, 255, 255, 0.72);
       backdrop-filter: blur(24px) saturate(180%);
       -webkit-backdrop-filter: blur(24px) saturate(180%);
       border-top: 1px solid rgba(0, 0, 0, 0.06);
       display: flex; justify-content: space-around;
       align-items: center; box-shadow: 0 -6px 20px rgba(0,0,0,0.05); z-index: 1000;
-      padding: 6px;
+      padding: 4px;
       .nav-item {
         display: flex; flex-direction: column; align-items: center;
         justify-content: center; color: #999; width: 100%; height: 100%;
         cursor: pointer;
-        border-radius: 16px;
+        border-radius: 12px;
         transition: transform var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
-        span { font-size: 11px; margin-top: 4px; letter-spacing: 0.01em; }
-        mat-icon { transition: transform var(--transition-fast); }
+        span { font-size: 10px; margin-top: 2px; letter-spacing: 0.01em; }
+        mat-icon { font-size: 22px; width: 22px; height: 22px; transition: transform var(--transition-fast); }
         &.active {
           color: var(--color-primary);
           background: color-mix(in oklab, var(--color-primary) 12%, transparent);
@@ -1832,8 +1990,42 @@ export class WeatherComponent implements OnInit, OnDestroy {
         &:active { transform: scale(0.96); }
       }
     }
+    @media (max-width: 480px) {
+      .bottom-nav { height: 58px; }
+      .bottom-nav .nav-item span { font-size: 9.5px; }
+      .bottom-nav .nav-item mat-icon { font-size: 20px; width: 20px; height: 20px; }
+    }
   `]
 })
 export class AppComponent {
   activeTab = 0;
+  isDark = false;
+
+  private readonly THEME_KEY = 'hkdl-theme';
+
+  constructor() {
+    // Restore persisted theme on load
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(this.THEME_KEY) : null;
+    this.isDark = saved === 'dark';
+    this.applyTheme();
+  }
+
+  toggleTheme(): void {
+    this.isDark = !this.isDark;
+    this.applyTheme();
+    try {
+      localStorage.setItem(this.THEME_KEY, this.isDark ? 'dark' : 'light');
+    } catch {
+      // localStorage unavailable (private mode, etc.) — no-op
+    }
+  }
+
+  private applyTheme(): void {
+    if (typeof document === 'undefined') return;
+    if (this.isDark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }
 }
