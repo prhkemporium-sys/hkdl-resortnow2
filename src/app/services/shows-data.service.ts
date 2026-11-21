@@ -174,6 +174,46 @@ export class ShowsDataService {
     );
   }
 
+  /**
+   * Returns a date-keyed map of park open/close strings (e.g.
+   * `{ "2026-11-20": "09:00-21:00" }`) for every day the Google sheet
+   * provides. Used by the "表で見る" weekly matrix view.
+   */
+  getParkHoursByDate(): Observable<{ [date: string]: string }> {
+    return this.fetchFromGoogleSheets().pipe(
+      map(response => this.extractParkHoursByDate(response)),
+      catchError(error => {
+        console.error('Error fetching per-day park hours from Google Sheets:', error);
+        return of({} as { [date: string]: string });
+      })
+    );
+  }
+
+  private extractParkHoursByDate(response: ShowsApiResponse): { [date: string]: string } {
+    const out: { [date: string]: string } = {};
+    if (!response.values || !Array.isArray(response.values)) return out;
+
+    for (let i = 1; i < response.values.length; i++) {
+      const row = response.values[i];
+      if (!row || row.length < 3) continue;
+
+      const dateStr = row[0];
+      const open = (row[1] || '').trim();
+      const close = (row[2] || '').trim();
+      if (!dateStr || (!open && !close)) continue;
+
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) continue;
+
+      const key = this.formatDateKey(date);
+      // Keep the first non-empty value we see for each day; later rows repeat.
+      if (out[key]) continue;
+      if (open && close) out[key] = `${open}-${close}`;
+      else out[key] = open || close;
+    }
+    return out;
+  }
+
   private extractTodaysHours(response: ShowsApiResponse): { open: string; close: string } | null {
     if (!response.values || !Array.isArray(response.values)) {
       return null;

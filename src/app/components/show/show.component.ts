@@ -56,8 +56,8 @@ import { pressPop, springIn } from '../../utils/motion';
 
         <!-- DATE + FILTER BAR -->
         <section class="controls-shell" id="schedule-section">
-          <!-- Date Selector -->
-          <div class="date-selector" *ngIf="next7Days.length > 0">
+          <!-- Date Selector (hidden in "週間スケジュール表" mode; the table spans all 7 days) -->
+          <div class="date-selector" *ngIf="next7Days.length > 0 && viewMode !== 'byTable'">
             <button *ngFor="let date of next7Days"
                     class="date-chip"
                     [class.active]="isSameDay(selectedDate, date)"
@@ -77,6 +77,10 @@ import { pressPop, springIn } from '../../utils/motion';
               <mat-button-toggle value="byShow">
                 <mat-icon>view_agenda</mat-icon>
                 <span>ショー別</span>
+              </mat-button-toggle>
+              <mat-button-toggle value="byTable">
+                <mat-icon>grid_on</mat-icon>
+                <span>表で見る</span>
               </mat-button-toggle>
             </mat-button-toggle-group>
           </div>
@@ -116,8 +120,8 @@ import { pressPop, springIn } from '../../utils/motion';
           <button mat-stroked-button color="primary" (click)="loadShows()">リトライ</button>
         </section>
 
-        <!-- EMPTY STATE -->
-        <section *ngIf="!loading && !error && filteredShows.length === 0 && next7Days.length > 0"
+        <!-- EMPTY STATE (byTime / byShow only — table mode handles its own "no data") -->
+        <section *ngIf="!loading && !error && viewMode !== 'byTable' && filteredShows.length === 0 && next7Days.length > 0"
                  class="state-card empty-card">
           <mat-icon class="state-icon">event_busy</mat-icon>
           <h2>ショースケジュールなし</h2>
@@ -125,9 +129,9 @@ import { pressPop, springIn } from '../../utils/motion';
         </section>
 
         <!-- SHOWS LIST -->
-        <section *ngIf="!loading && !error && filteredShows.length > 0" class="shows-layout">
-          <!-- Sticky date header for context -->
-          <div class="day-header">
+        <section *ngIf="!loading && !error && (viewMode === 'byTable' || filteredShows.length > 0)" class="shows-layout">
+          <!-- Sticky date header for context (per-day modes only) -->
+          <div class="day-header" *ngIf="viewMode !== 'byTable'">
             <div>
               <span class="day-header-label">選択日</span>
               <h2 class="day-header-title">
@@ -137,6 +141,18 @@ import { pressPop, springIn } from '../../utils/motion';
             <span class="day-header-count">
               {{ viewMode === 'byShow' ? groupedShows.length + '演目' : filteredShows.length + '公演' }}
             </span>
+          </div>
+
+          <!-- Table-mode date range header -->
+          <div class="day-header day-header-range" *ngIf="viewMode === 'byTable' && tableHeaderDays.length === 7">
+            <div>
+              <span class="day-header-label">週間ショー</span>
+              <h2 class="day-header-title">
+                {{ tableHeaderDays[0].date | date:'yyyy年MM月dd日' }}
+                 〜 {{ tableHeaderDays[6].date | date:'MM月dd日' }}
+              </h2>
+            </div>
+            <span class="day-header-count">{{ tableRows.length }}演目</span>
           </div>
 
           <!-- BY TIME (planner style) -->
@@ -149,33 +165,72 @@ import { pressPop, springIn } from '../../utils/motion';
               </div>
             </div>
 
-            <!-- Scrollable events strip -->
-            <div class="planner-events-scroll">
-              <div class="planner-events"
-                   [style.height.px]="plannerHeightPx"
-                   [style.min-width]="plannerMinWidthPct + '%'">
-                <article #cardRef
-                         *ngFor="let ev of plannerEvents"
-                         class="show-card planner-event"
-                         [class.is-short]="ev.short"
-                         [ngClass]="ev.show.type"
-                         [style.top.px]="ev.top"
-                         [style.height.px]="ev.height"
-                         [style.left]="ev.left"
-                         [style.width]="ev.width"
-                         [style.border-left-color]="showColors[ev.show.title]"
-                         [style.background]="'linear-gradient(135deg, ' + showColors[ev.show.title] + '15, ' + showColors[ev.show.title] + '08)'">
-                  <div class="planner-event-head">
-                    <span class="planner-event-time">{{ ev.show.time }}</span>
-                    @if (showDurations[ev.show.title]) {
-                      <span class="planner-event-duration">{{ showDurations[ev.show.title] }}分</span>
-                    }
-                  </div>
-                  <div class="planner-event-title">{{ ev.show.title }}</div>
-                  @if (showEmojis[ev.show.title]) {
-                    <span class="show-emoji" aria-hidden="true">{{ showEmojis[ev.show.title] }}</span>
+            <!-- Events area: singletons span full width; overlapping clusters are
+                 their own horizontally-scrollable "carousel" so only the affected
+                 time band moves to reveal more shows. -->
+            <div class="planner-events" [style.height.px]="plannerHeightPx">
+              <!-- Non-overlapping events (full width, no scroll) -->
+              <article #cardRef
+                       *ngFor="let ev of plannerEvents"
+                       class="show-card planner-event"
+                       [class.is-short]="ev.short"
+                       [ngClass]="ev.show.type"
+                       [style.top.px]="ev.top"
+                       [style.height.px]="ev.height"
+                       [style.left]="ev.left"
+                       [style.width]="ev.width"
+                       [style.border-left-color]="showColors[ev.show.title]"
+                       [style.background]="'linear-gradient(135deg, ' + showColors[ev.show.title] + '15, ' + showColors[ev.show.title] + '08)'">
+                <div class="planner-event-head">
+                  <span class="planner-event-time">{{ ev.show.time }}</span>
+                  @if (showDurations[ev.show.title]) {
+                    <span class="planner-event-duration">{{ showDurations[ev.show.title] }}分</span>
                   }
-                </article>
+                </div>
+                <div class="planner-event-title">{{ ev.show.title }}</div>
+                @if (showEmojis[ev.show.title]) {
+                  <span class="show-emoji" aria-hidden="true">{{ showEmojis[ev.show.title] }}</span>
+                }
+              </article>
+
+              <!-- Overlap clusters: horizontally scrollable with an arrow hint -->
+              <div *ngFor="let cluster of plannerClusters; let ci = index"
+                   class="planner-cluster"
+                   [class.at-end]="cluster.atEnd"
+                   [style.top.px]="cluster.top"
+                   [style.height.px]="cluster.height">
+                <div class="planner-cluster-scroll"
+                     (scroll)="onClusterScroll($event, ci)">
+                  <div class="planner-cluster-inner"
+                       [style.width.%]="cluster.innerWidthPct">
+                    <article #cardRef
+                             *ngFor="let ev of cluster.events"
+                             class="show-card planner-event"
+                             [class.is-short]="ev.short"
+                             [ngClass]="ev.show.type"
+                             [style.top.px]="ev.top"
+                             [style.height.px]="ev.height"
+                             [style.left]="ev.left"
+                             [style.width]="ev.width"
+                             [style.border-left-color]="showColors[ev.show.title]"
+                             [style.background]="'linear-gradient(135deg, ' + showColors[ev.show.title] + '15, ' + showColors[ev.show.title] + '08)'">
+                      <div class="planner-event-head">
+                        <span class="planner-event-time">{{ ev.show.time }}</span>
+                        @if (showDurations[ev.show.title]) {
+                          <span class="planner-event-duration">{{ showDurations[ev.show.title] }}分</span>
+                        }
+                      </div>
+                      <div class="planner-event-title">{{ ev.show.title }}</div>
+                      @if (showEmojis[ev.show.title]) {
+                        <span class="show-emoji" aria-hidden="true">{{ showEmojis[ev.show.title] }}</span>
+                      }
+                    </article>
+                  </div>
+                </div>
+                <!-- Scroll-right indicator: fades out when the cluster is scrolled to its end -->
+                <div class="planner-cluster-arrow" aria-hidden="true">
+                  <mat-icon>chevron_right</mat-icon>
+                </div>
               </div>
             </div>
           </div>
@@ -217,10 +272,86 @@ import { pressPop, springIn } from '../../utils/motion';
 
             </article>
           </div>
+
+          <!-- BY TABLE (weekly matrix) -->
+          <div class="table-view" *ngIf="viewMode === 'byTable'">
+            <!-- Empty state: no shows across any of the 7 days -->
+            <div *ngIf="tableRows.length === 0" class="state-card empty-card">
+              <mat-icon class="state-icon">event_busy</mat-icon>
+              <h2>ショースケジュールなし</h2>
+              <p>来週の公演スケジュールはまだ公開されていません。</p>
+            </div>
+
+            <div *ngIf="tableRows.length > 0" class="table-scroll">
+              <table class="schedule-matrix" role="table" aria-label="週間ショースケジュール">
+                <thead>
+                  <tr>
+                    <th class="col-show-name" scope="col">
+                      <div class="col-show-title">公演プログラム</div>
+                      <div class="col-show-sub">(下段: パーク運営時間)</div>
+                    </th>
+                    <th *ngFor="let day of tableHeaderDays"
+                        class="col-day"
+                        [class.sat]="day.isSat"
+                        [class.sun]="day.isSun"
+                        scope="col">
+                      <span class="th-date">{{ day.dateShort }}({{ day.dayName }})</span>
+                      <span class="th-hours">{{ day.parkHours || '--:--' }}</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of tableRows">
+                    <th class="cell-show-name"
+                        scope="row"
+                        [style.border-left-color]="row.color">
+                      <span class="show-title-text" [style.color]="row.color">
+                        {{ row.title }}
+                        <span class="show-emoji-inline" *ngIf="showEmojis[row.title]" aria-hidden="true">
+                          {{ showEmojis[row.title] }}
+                        </span>
+                        <span class="show-title-duration" *ngIf="row.duration">
+                          (所要時間 {{ row.duration }}分)
+                        </span>
+                      </span>
+                    </th>
+                    <td *ngFor="let times of row.cells; let ci = index"
+                        class="cell-time"
+                        [class.has-time]="times.length > 0"
+                        [class.sat]="tableHeaderDays[ci]?.isSat"
+                        [class.sun]="tableHeaderDays[ci]?.isSun">
+                      <ng-container *ngIf="times.length > 0; else emptyCell">
+                        <span *ngFor="let t of times" class="time-block">{{ t }}</span>
+                      </ng-container>
+                      <ng-template #emptyCell>-</ng-template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Weekly closure footer -->
+            <div class="table-closures" *ngIf="tableClosures.length > 0">
+              <div class="table-closures-title">
+                <mat-icon>block</mat-icon>
+                <span>休止中アトラクション</span>
+              </div>
+              <div class="table-closures-list">
+                <span *ngFor="let closure of tableClosures" class="closure-item">
+                  <mat-icon class="closure-item-icon">warning_amber</mat-icon>
+                  {{ closure }}
+                </span>
+              </div>
+            </div>
+            <div class="table-closures no-closures" *ngIf="tableClosures.length === 0">
+              <mat-icon>check_circle</mat-icon>
+              <span>期間中、休止予定なし</span>
+            </div>
+          </div>
         </section>
 
-        <!-- CLOSED FACILITIES SECTION -->
-        <section *ngIf="!loading && !error && closuresForSelectedDate.length > 0" class="closures-section" id="closures-section">
+        <!-- CLOSED FACILITIES SECTION (hidden in table mode — closures are shown in the table footer) -->
+        <section *ngIf="!loading && !error && viewMode !== 'byTable' && closuresForSelectedDate.length > 0" class="closures-section" id="closures-section">
           <div class="closures-header">
             <mat-icon>block</mat-icon>
             <div class="closures-header-text">
@@ -991,17 +1122,93 @@ import { pressPop, springIn } from '../../utils/motion';
       background: repeating-linear-gradient(to right, rgba(148,163,184,0.35) 0 6px, transparent 6px 12px);
     }
 
-    .planner-events-scroll {
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.35);
-    }
-
     .planner-events {
       position: relative;
-      /* height + min-width set inline by the component */
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.35);
+      /* height set inline by the component */
+    }
+
+    /* Each overlap group becomes its own horizontally-scrollable band.
+       Only the affected time range moves when the user scrolls — the rest
+       of the schedule stays put. */
+    .planner-cluster {
+      position: absolute;
+      left: 0;
+      right: 0;
+    }
+
+    .planner-cluster-scroll {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow-x: auto;
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scroll-snap-type: x proximity;
+    }
+
+    .planner-cluster-scroll::-webkit-scrollbar { height: 4px; }
+    .planner-cluster-scroll::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.45);
+      border-radius: 4px;
+    }
+
+    .planner-cluster-inner {
+      position: relative;
+      height: 100%;
+      /* width set inline (>100% to force horizontal scrolling) */
+    }
+
+    .planner-cluster-inner > .planner-event {
+      scroll-snap-align: start;
+    }
+
+    /* Right-pointing arrow that hints the band is scrollable. Sits above the
+       cluster's right edge and gently pulses; fades out at the end of scroll. */
+    .planner-cluster-arrow {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 36px;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 2px;
+      background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.85) 70%,
+        rgba(255, 255, 255, 0.95) 100%
+      );
+      border-radius: 0 12px 12px 0;
+      opacity: 1;
+      transition: opacity var(--transition-fast, 180ms) ease;
+    }
+
+    .planner-cluster.at-end .planner-cluster-arrow {
+      opacity: 0;
+    }
+
+    .planner-cluster-arrow mat-icon {
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+      color: var(--color-primary, #690e7f);
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.18));
+      animation: planner-arrow-nudge 1.4s ease-in-out infinite;
+    }
+
+    @keyframes planner-arrow-nudge {
+      0%, 100% { transform: translateX(0); opacity: 0.85; }
+      50%      { transform: translateX(4px); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .planner-cluster-arrow mat-icon { animation: none; }
     }
 
     .planner-event {
@@ -1102,6 +1309,261 @@ import { pressPop, springIn } from '../../utils/motion';
       pointer-events: none;
       filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.15));
       z-index: 1;
+    }
+
+    /* TABLE VIEW (表で見る) — weekly matrix inspired by the Apps Script dashboard. */
+
+    .table-view {
+      margin-top: var(--space-2);
+    }
+
+    .day-header-range .day-header-title {
+      white-space: normal;
+    }
+
+    .table-scroll {
+      /* On narrow screens, allow a single horizontal scroll of the whole
+         matrix rather than squeezing 8 columns into 320 px. */
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 2px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 10% 12%, rgba(255, 246, 199, 0.55), transparent 50%),
+        radial-gradient(circle at 90% 85%, rgba(184, 163, 255, 0.35), transparent 55%),
+        linear-gradient(180deg, #f7f0ff 0%, #edf5ff 55%, #fff6df 100%);
+      box-shadow:
+        0 10px 30px rgba(15, 23, 42, 0.14),
+        inset 0 0 0 1px rgba(122, 81, 190, 0.22);
+    }
+
+    .schedule-matrix {
+      width: 100%;
+      min-width: 720px;        /* keeps columns readable; parent scrolls */
+      border-collapse: separate;
+      border-spacing: 5px;
+      table-layout: fixed;
+    }
+
+    .schedule-matrix th,
+    .schedule-matrix td {
+      vertical-align: middle;
+      box-sizing: border-box;
+    }
+
+    .schedule-matrix th.col-show-name {
+      width: 26%;
+      padding: 8px 6px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #ffffff 0%, #eee7ff 100%);
+      border: 1px solid rgba(146, 106, 205, 0.27);
+      box-shadow:
+        0 3px 8px rgba(57, 39, 107, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      text-align: center;
+    }
+
+    .col-show-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #4b347e;
+      margin-bottom: 2px;
+    }
+
+    .col-show-sub {
+      font-size: 0.6rem;
+      color: #b8792b;
+      font-weight: 500;
+    }
+
+    .schedule-matrix th.col-day {
+      width: 10.5%;
+      padding: 8px 2px;
+      border-radius: 10px;
+      border: 1px solid rgba(146, 106, 205, 0.27);
+      background: linear-gradient(180deg, #ffffff 0%, #eee7ff 100%);
+      box-shadow:
+        0 3px 8px rgba(57, 39, 107, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      text-align: center;
+    }
+
+    .schedule-matrix th.col-day.sat {
+      border-color: rgba(84, 164, 221, 0.44);
+      background: linear-gradient(180deg, #f7fcff 0%, #dff3ff 100%);
+    }
+
+    .schedule-matrix th.col-day.sat .th-date {
+      color: #2478b9;
+    }
+
+    .schedule-matrix th.col-day.sun {
+      border-color: rgba(224, 112, 153, 0.42);
+      background: linear-gradient(180deg, #fffafd 0%, #ffe5ef 100%);
+    }
+
+    .schedule-matrix th.col-day.sun .th-date {
+      color: #bd477d;
+    }
+
+    .th-date {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #4b347e;
+    }
+
+    .th-hours {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #b8792b;
+      letter-spacing: 0.02em;
+    }
+
+    .schedule-matrix .cell-show-name {
+      height: 80px;
+      padding: 6px 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.95);
+      border-right: 1px solid rgba(111, 75, 175, 0.16);
+      border-bottom: 1px solid rgba(111, 75, 175, 0.16);
+      border-left: 5px solid #6c5ce7;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(252, 249, 255, 0.92) 100%);
+      box-shadow:
+        0 4px 9px rgba(51, 34, 96, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.92);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .show-title-text {
+      display: inline-block;
+      width: 100%;
+      font-size: 0.78rem;
+      font-weight: 800;
+      line-height: 1.3;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .show-emoji-inline {
+      margin-left: 2px;
+      font-weight: normal;
+    }
+
+    .show-title-duration {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.62rem;
+      font-weight: 500;
+      color: #6b7280;
+      opacity: 0.9;
+    }
+
+    .schedule-matrix .cell-time {
+      height: 80px;
+      padding: 4px 2px;
+      border: 1px dashed rgba(103, 74, 159, 0.18);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.34);
+      color: #a49bb5;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .schedule-matrix .cell-time.has-time {
+      color: #413263;
+      border: 1px solid rgba(141, 102, 202, 0.22);
+      background: linear-gradient(180deg, #ffffff 0%, #f8f4ff 100%);
+      box-shadow:
+        0 3px 7px rgba(52, 34, 98, 0.09),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    .schedule-matrix .cell-time.sat.has-time {
+      background: linear-gradient(180deg, #ffffff 0%, #eaf5ff 100%);
+    }
+
+    .schedule-matrix .cell-time.sun.has-time {
+      background: linear-gradient(180deg, #ffffff 0%, #ffeef5 100%);
+    }
+
+    .time-block {
+      display: block;
+      line-height: 1.3;
+    }
+
+    /* Closure footer (table mode) */
+
+    .table-closures {
+      margin-top: var(--space-3);
+      padding: 12px 16px;
+      border: 1px solid rgba(215, 161, 72, 0.5);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(255, 253, 244, 0.97) 0%, rgba(255, 244, 216, 0.95) 100%);
+      box-shadow:
+        0 4px 11px rgba(92, 59, 131, 0.11),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .table-closures-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      color: #a85a68;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .table-closures-title mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .table-closures-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+    }
+
+    .closure-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border: 1px solid rgba(224, 141, 157, 0.35);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.85);
+      color: #584866;
+      font-size: 0.78rem;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(110, 68, 97, 0.06);
+    }
+
+    .closure-item-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      color: #d97706;
+    }
+
+    .table-closures.no-closures {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #4b7f5a;
+    }
+
+    .table-closures.no-closures mat-icon {
+      color: #16a34a;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
     }
 
     /* CLOSED FACILITIES SECTION */
@@ -1319,7 +1781,27 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
   shows: ShowsByDate = {};
   filteredShows: Show[] = [];
   groupedShows: { title: string; times: string[]; section: string; description: string; type: ShowType; date: Date }[] = [];
-  viewMode: 'byTime' | 'byShow' = 'byTime';
+  viewMode: 'byTime' | 'byShow' | 'byTable' = 'byTime';
+
+  /** Weekly matrix (7 days from tomorrow) view-model for "表で見る". */
+  tableHeaderDays: {
+    date: Date;
+    dateShort: string;   // e.g. "11/20"
+    dayName: string;     // 日/月/火/…
+    isSun: boolean;
+    isSat: boolean;
+    parkHours: string;   // e.g. "09:00-21:00"
+  }[] = [];
+  tableRows: {
+    title: string;
+    color: string;
+    duration: number;    // 0 if unknown
+    cells: string[][];   // one entry per day in `tableHeaderDays`, each a list of start times
+  }[] = [];
+  /** Closures across the 7-day window, formatted "Facility (MM/DD クローズ)" etc. */
+  tableClosures: string[] = [];
+  /** Per-date park hours loaded from the Google sheet. */
+  parkHoursByDate: { [date: string]: string } = {};
   closures: { [date: string]: string[] } = {};
   closuresForSelectedDate: string[] = [];
   next7Days: Date[] = [];
@@ -1346,6 +1828,7 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
   plannerHourLabels: { label: string; top: number }[] = [];
   plannerHeightPx = 0;
   plannerMinWidthPct = 100;
+  /** Non-overlapping events, positioned in the planner's absolute coordinate space. */
   plannerEvents: {
     show: Show;
     top: number;
@@ -1353,6 +1836,23 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
     left: string;
     width: string;
     short: boolean;
+  }[] = [];
+  /** Overlap clusters — each rendered as its own horizontally-scrollable band so
+      only the affected time range moves; events inside are positioned relative
+      to the cluster's own top-left origin. */
+  plannerClusters: {
+    top: number;
+    height: number;
+    innerWidthPct: number;
+    atEnd: boolean;
+    events: {
+      show: Show;
+      top: number;     // relative to cluster top
+      height: number;
+      left: string;
+      width: string;
+      short: boolean;
+    }[];
   }[] = [];
   loading = false;
   error: string | null = null;
@@ -1364,6 +1864,21 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
     this.loadShows();
     this.loadNotice();
     this.loadShowEmojis();
+    this.loadParkHoursByDate();
+  }
+
+  /** Load per-date open/close so the "表で見る" header row can show
+   *  park hours under each date. */
+  loadParkHoursByDate(): void {
+    this.showsService.getParkHoursByDate()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (map) => {
+          this.parkHoursByDate = map;
+          this.buildTableView();
+        },
+        error: (err) => console.error('Error loading per-date park hours:', err)
+      });
   }
 
   ngAfterViewInit(): void {
@@ -1388,6 +1903,7 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
           this.showEmojis = data.emojis;
           this.showDurations = data.durations;
           this.buildPlanner();
+          this.buildTableView();
         },
         error: (error) => { console.error('Error loading show emojis:', error); }
       });
@@ -1490,6 +2006,7 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
           this.extractUniqueShowNames();
           this.assignShowColors();
           this.filterShowsByDateAndType();
+          this.buildTableView();
           this.loadClosures();
           this.loading = false;
         },
@@ -1508,6 +2025,7 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
         next: (closures: { [date: string]: string[] }) => {
           this.closures = closures;
           this.updateClosuresForSelectedDate();
+          this.buildTableView();
         },
         error: (error: unknown) => {
           console.error('Error loading closures:', error);
@@ -1528,6 +2046,7 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
           this.extractUniqueShowNames();
           this.assignShowColors();
           this.filterShowsByDateAndType();
+          this.buildTableView();
           this.loading = false;
         },
         error: (error: unknown) => {
@@ -1576,9 +2095,12 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.selectedShowNames.includes(showName);
   }
 
-  setViewMode(mode: 'byTime' | 'byShow'): void {
+  setViewMode(mode: 'byTime' | 'byShow' | 'byTable'): void {
     if (!mode) return;
     this.viewMode = mode;
+    if (mode === 'byTable') {
+      this.buildTableView();
+    }
   }
 
   onChipTap(event: Event): void {
@@ -1666,38 +2188,175 @@ export class ShowComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     if (cur.length) clusters.push(cur);
 
-    // Place events. Non-overlapping cluster (1 item) uses full width.
-    // Overlapping cluster: each column is 80% wide, offset by (index * 80%) left.
+    // Place events. Non-overlapping clusters become plain `plannerEvents`
+    // positioned in the planner's full coordinate space (full width).
+    // Multi-event clusters become `plannerClusters`: each is a horizontally
+    // scrollable carousel band positioned over the cluster's time range, so
+    // only the affected part of the schedule moves when the user scrolls.
     // Short events (≤ SHORT_EVENT_MAX_MIN) are flagged for the "bulge" style
     // so the title has somewhere to render below the actual duration slot.
     const events: typeof this.plannerEvents = [];
-    let maxRightPct = 100;
-    for (const cluster of clusters) {
-      const buildEvent = (
-        it: typeof items[number],
-        left: string,
-        width: string
-      ) => ({
-        show: it.show,
-        top: (it.start - visibleStart) * this.PX_PER_MIN,
-        height: Math.max(it.dur * this.PX_PER_MIN, 22),
-        left,
-        width,
-        short: it.dur <= this.SHORT_EVENT_MAX_MIN
-      });
+    const plannerClusters: typeof this.plannerClusters = [];
 
+    for (const cluster of clusters) {
       if (cluster.length === 1) {
-        events.push(buildEvent(cluster[0], '0%', '100%'));
-      } else {
-        cluster.forEach((it, idx) => {
-          const leftPct = idx * 80;
-          events.push(buildEvent(it, `${leftPct}%`, '80%'));
-          maxRightPct = Math.max(maxRightPct, leftPct + 80);
+        const it = cluster[0];
+        events.push({
+          show: it.show,
+          top: (it.start - visibleStart) * this.PX_PER_MIN,
+          height: Math.max(it.dur * this.PX_PER_MIN, 22),
+          left: '0%',
+          width: '100%',
+          short: it.dur <= this.SHORT_EVENT_MAX_MIN
         });
+        continue;
       }
+
+      // Multi-event cluster → its own scrollable band.
+      const clusterStart = cluster[0].start;
+      const clusterEnd = cluster.reduce((m, it) => Math.max(m, it.end), -Infinity);
+      const clusterTop = (clusterStart - visibleStart) * this.PX_PER_MIN;
+      const clusterHeight = Math.max((clusterEnd - clusterStart) * this.PX_PER_MIN, 22);
+
+      // 80%-wide columns offset by (idx * 80%). Total inner width widens past
+      // 100% so the band itself scrolls horizontally.
+      const colWidthPct = 80;
+      const stepPct = 80;
+      const innerWidthPct = (cluster.length - 1) * stepPct + colWidthPct;
+
+      const clusterEvents = cluster.map((it, idx) => ({
+        show: it.show,
+        top: (it.start - clusterStart) * this.PX_PER_MIN,
+        height: Math.max(it.dur * this.PX_PER_MIN, 22),
+        // Positions are relative to the cluster's inner width (already > 100%),
+        // so compute left as a fraction of innerWidth to keep columns aligned.
+        left: `${(idx * stepPct / innerWidthPct) * 100}%`,
+        width: `${(colWidthPct / innerWidthPct) * 100}%`,
+        short: it.dur <= this.SHORT_EVENT_MAX_MIN
+      }));
+
+      plannerClusters.push({
+        top: clusterTop,
+        height: clusterHeight,
+        innerWidthPct,
+        atEnd: false,
+        events: clusterEvents
+      });
     }
+
     this.plannerEvents = events;
-    this.plannerMinWidthPct = maxRightPct;
+    this.plannerClusters = plannerClusters;
+    // Whole-row width stays 100% — overflow is handled per-cluster now.
+    this.plannerMinWidthPct = 100;
+  }
+
+  /**
+   * Build the "表で見る" weekly matrix view-model:
+   * - Columns = `next7Days` (seven days from tomorrow)
+   * - Rows   = every show that appears at least once in that window, sorted
+   *            by first appearance (preserves chronological "introduction" order).
+   * - Cells  = that show's start times on that day (empty array → "-").
+   * - Footer = closures across the week, with a formatted date range.
+   *
+   * Called whenever any of {shows, durations, closures, parkHours} update,
+   * and on-demand when the user switches to the table view.
+   */
+  private buildTableView(): void {
+    // 1) Header row — one entry per day in `next7Days`.
+    const headerDays = this.next7Days.map(date => {
+      const key = this.formatDateKey(date);
+      const dow = date.getDay();
+      return {
+        date,
+        dateShort: `${date.getMonth() + 1}/${String(date.getDate()).padStart(2, '0')}`,
+        dayName: this.getJapaneseDayOfWeek(date),
+        isSun: dow === 0,
+        isSat: dow === 6,
+        parkHours: this.parkHoursByDate[key] || ''
+      };
+    });
+
+    // 2) Collect every show that appears in the window, remembering the
+    //    first day/time it appears so rows are ordered chronologically.
+    const firstSeen = new Map<string, { date: number; time: string }>();
+    const perShowPerDay = new Map<string, string[][]>(); // title → cells
+
+    const dayKeys = this.next7Days.map(d => this.formatDateKey(d));
+    dayKeys.forEach((key, idx) => {
+      const dayShows = this.shows[key] || [];
+      dayShows.forEach(show => {
+        if (!perShowPerDay.has(show.title)) {
+          perShowPerDay.set(show.title, dayKeys.map(() => [] as string[]));
+        }
+        perShowPerDay.get(show.title)![idx].push(show.time);
+
+        const seen = firstSeen.get(show.title);
+        if (!seen || idx < seen.date || (idx === seen.date && show.time < seen.time)) {
+          firstSeen.set(show.title, { date: idx, time: show.time });
+        }
+      });
+    });
+
+    // Sort times inside each cell so they render in order.
+    perShowPerDay.forEach(cells => {
+      cells.forEach(times => times.sort());
+    });
+
+    // 3) Row list, sorted by first appearance.
+    const titles = Array.from(perShowPerDay.keys()).sort((a, b) => {
+      const sa = firstSeen.get(a)!;
+      const sb = firstSeen.get(b)!;
+      if (sa.date !== sb.date) return sa.date - sb.date;
+      return sa.time.localeCompare(sb.time);
+    });
+
+    const rows = titles.map(title => ({
+      title,
+      color: this.showColors[title] || '#6c5ce7',
+      duration: this.showDurations[title] || 0,
+      cells: perShowPerDay.get(title)!
+    }));
+
+    // 4) Closures across the window, aggregated per facility.
+    const facilityDays = new Map<string, number[]>();  // facility → day indices
+    dayKeys.forEach((key, idx) => {
+      (this.closures[key] || []).forEach(name => {
+        if (!facilityDays.has(name)) facilityDays.set(name, []);
+        facilityDays.get(name)!.push(idx);
+      });
+    });
+
+    const fmtMD = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
+    const closureLabels: string[] = [];
+    facilityDays.forEach((idxs, name) => {
+      idxs.sort((a, b) => a - b);
+      if (idxs.length === 7) {
+        closureLabels.push(`${name} (この週は休止)`);
+      } else if (idxs.length === 1) {
+        closureLabels.push(`${name} (${fmtMD(this.next7Days[idxs[0]])} クローズ)`);
+      } else {
+        const first = fmtMD(this.next7Days[idxs[0]]);
+        const last  = fmtMD(this.next7Days[idxs[idxs.length - 1]]);
+        closureLabels.push(`${name} (${first}〜${last} クローズ)`);
+      }
+    });
+    closureLabels.sort();
+
+    this.tableHeaderDays = headerDays;
+    this.tableRows = rows;
+    this.tableClosures = closureLabels;
+  }
+
+  /**
+   * Hide the "scrollable right" arrow once the user has scrolled a cluster to
+   * (near) its end. Called from the template as (scroll) on each band.
+   */
+  onClusterScroll(event: Event, idx: number): void {
+    const el = event.target as HTMLElement | null;
+    const cluster = this.plannerClusters[idx];
+    if (!el || !cluster) return;
+    const remaining = el.scrollWidth - el.clientWidth - el.scrollLeft;
+    cluster.atEnd = remaining <= 4;   // small epsilon for sub-pixel rounding
   }
 
   private filterShowsByDateAndType(): void {
